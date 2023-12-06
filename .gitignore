@@ -1,0 +1,8 @@
+# intermediate outputs directory
+/outputs
+
+# unused code
+/junk
+
+# experimental
+random_pieces_of_code.m
