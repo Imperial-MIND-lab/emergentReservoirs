@@ -1,5 +1,5 @@
 %% prepare environment
-cd /home/hanna/Code/projects/2023-MscPhD_emergence
+% cd /home/hanna/Code/projects/2023-MscPhD_emergence
 
 % get default paths
 paths = getConfig('paths');
