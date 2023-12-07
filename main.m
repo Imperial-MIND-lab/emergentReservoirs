@@ -19,20 +19,15 @@ end
 % Relationship between emergence and prediction performance
 
 % get configurations
-config = getConfig('analysis01A', true);
+config = getConfig('analysis01A', false);
 
 % run analysis
 [perfPops, psiPops] = analysis01A(config);
 
 % save outputs
 cd(paths.outputs)
-save analysis01A.mat perfPops psiPops config
-
-% save figures
-cd(paths.figures)
-savefigs(paths.figures, 'analysis01A', true)
-
-% return to main directory
+filename = ['analysis01A_', datestr(now, 30), '.mat'];
+save(filename, "psiPops", "perfPops", "config")
 cd(paths.main)
 
 %% analysis 02

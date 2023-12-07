@@ -1,4 +1,4 @@
-function [] = plot_genes(populations)
+function [] = plotGenes(populations)
 % plot gene distributions
 
 % fetch hyperparams of best solution

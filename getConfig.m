@@ -29,7 +29,7 @@ switch analysisName
         else
             config.numPopulations = 10;
             config.numGenerations = 3000;
-            config.populationProperties = {'LogFreq', 10, 'Size', 100, 'nTest', 50};
+            config.populationProperties = {'LogFreq', 10, 'Size', 100, 'nTest', 100};
         end
 end
 

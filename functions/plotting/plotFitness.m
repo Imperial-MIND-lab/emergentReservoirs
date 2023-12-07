@@ -1,4 +1,4 @@
-function [stats] = plot_fitness_2axes(populations)
+function [stats] = plotFitness(populations)
 % outputs psi-loss and psi-performance correlations and p-values.
 
 % get number of populations and performance measure names
