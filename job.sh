@@ -1,8 +1,8 @@
 #!/bin/bash
-#PBS -l select=1:ncpus=8:mem=32gb
+#PBS -l select=1:ncpus=12:mem=32gb
 #PBS -l walltime=08:00:00
 #PBS -N analysis01A
-#PBS -J 1-20
+#PBS -J 1-10
 
 module load tools/prod
 module load MATLAB/2023a_Update_3
