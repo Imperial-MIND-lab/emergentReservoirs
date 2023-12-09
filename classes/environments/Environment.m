@@ -65,7 +65,7 @@ classdef (Abstract) Environment
 
             % sample n time series
             numts = 1;
-            numAttempts = 0; maxAttempts = 50;
+            numAttempts = 0; maxAttempts = 5*n;
             while(numts <= n)
                 % sample initial condition
                 u(:, 1, numts) = obj.init;
