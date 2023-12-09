@@ -9,3 +9,6 @@ random_pieces_of_code.m
 
 # GitHub repo that needs to be cloned manually
 /external/ReconcilingEmergences/
+
+# matlab temporary files
+*.asv
