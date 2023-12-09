@@ -1,5 +1,9 @@
-%% prepare environment
-% cd /home/hanna/Code/projects/2023-MscPhD_emergence
+function [] = main(jobID, testRun)
+
+% test run = false by default
+if nargin<2
+    testRun=false;
+end
 
 % get default paths
 paths = getConfig('paths');
@@ -19,14 +23,17 @@ end
 % Relationship between emergence and prediction performance
 
 % get configurations
-config = getConfig('analysis01A', false);
+config = getConfig('analysis01A', testRun);
+
+% extract configs for this job
+config.populationProperties = table2struct(config.populationProperties(jobID, :));
 
 % run analysis
 [perfPops, psiPops] = analysis01A(config);
 
 % save outputs
 cd(paths.outputs)
-filename = ['analysis01A_', datestr(now, 30), '.mat'];
+filename = ['analysis01A_', num2str(jobID), '.mat'];
 save(filename, "psiPops", "perfPops", "config")
 cd(paths.main)
 
@@ -35,3 +42,8 @@ cd(paths.main)
 
 %% analysis 03
 % Emergence, prediction and the human brain topology
+
+
+
+end
+

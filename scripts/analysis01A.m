@@ -6,6 +6,9 @@ function [perfPops, psiPops] = analysis01A(config)
 % load human structural connectivity
 sc = load("sc.mat").sc;
 
+% turn struct input into name-value pair cell
+config.populationProperties = struct2NV(config.populationProperties); 
+
 % output variables
 psiPops = cell(config.numPopulations, 1);
 perfPops = cell(config.numPopulations, 1);
@@ -23,13 +26,13 @@ for run = 1:config.numPopulations
 
     % evolve the performance population
     tic
-    disp("starting to evolve performance population...")
+    disp("Evolving performance population...")
     perfPops{run} = perfPops{run}.evolve(config.numGenerations);
     toc
     
     % evolve the emergence population
     tic
-    disp("starting to evolve emergence population...")
+    disp("Evolving emergence population...")
     psiPops{run} = psiPops{run}.evolve(config.numGenerations);
     toc
 end
