@@ -65,6 +65,7 @@ classdef (Abstract) Environment
 
             % sample n time series
             numts = 1;
+            numAttempts = 0; maxAttempts = 50;
             while(numts <= n)
                 % sample initial condition
                 u(:, 1, numts) = obj.init;
@@ -81,6 +82,12 @@ classdef (Abstract) Environment
                     t = t+1;
                 end
                 numts = numts+1;
+                % avoid infinite loops
+                numAttempts = numAttempts +1;
+                if numAttempts >= maxAttempts
+                    error("Max number of attempts reached.")
+                    break
+                end
             end
             % add noise to time series
             if obj.SignalNoise > 0
