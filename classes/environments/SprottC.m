@@ -1,6 +1,5 @@
 classdef SprottC < Environment
 % SprottC system.
-% don't use. This goes crazy for some initial conditions.
     
     properties
         D = 3;                                      % system dimension 
