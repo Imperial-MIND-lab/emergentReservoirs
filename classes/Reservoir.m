@@ -518,6 +518,8 @@ classdef Reservoir
 
         function obj = computeWout(obj, utrain, R)
             % Computes and sets output weights Wout.
+            utrain = utrain(:, 1:end-1);
+            R = R(:, 2:end);
             obj.Wout = ((R*R'+obj.Beta*eye(obj.N))\(R*utrain'))';
         end
 
