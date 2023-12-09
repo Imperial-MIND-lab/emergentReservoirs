@@ -9,4 +9,4 @@ module load MATLAB/2023a_Update_3
 
 cd $PBS_O_WORKDIR
 
-matlab -nodisplay -nosplash -nodesktop -r "try, run('~/projects/emergentReservoirs/main(${PBS_ARRAY_INDEX},true).m'); catch me, e=getReport(me); fprintf('%s\n', e); end; exit;"
+matlab -nodisplay -nosplash -nodesktop -r "try, run('~/projects/emergentReservoirs/main(${PBS_ARRAY_INDEX}).m'); catch me, e=getReport(me); fprintf('%s\n', e); end; exit;"
