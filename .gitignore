@@ -12,3 +12,6 @@ random_pieces_of_code.m
 
 # matlab temporary files
 *.asv
+
+# test outputs directory
+/testouts
