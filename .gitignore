@@ -15,3 +15,7 @@ random_pieces_of_code.m
 
 # test outputs directory
 /testouts
+
+# ignore log files
+*.o*
+*.e*
