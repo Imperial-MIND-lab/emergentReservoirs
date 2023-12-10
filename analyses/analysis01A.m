@@ -6,9 +6,6 @@ function [perfPops, psiPops] = analysis01A(config)
 % set a unique random number generator seed!
 rng(config.jobID)
 
-% load human structural connectivity
-sc = load("sc.mat").sc;
-
 % turn struct input into name-value pair cell
 config.populationProperties = struct2NV(config.populationProperties); 
 
@@ -20,7 +17,7 @@ for run = 1:config.numPopulations
     disp(strcat("START RUN: ", num2str(run)))
 
     % initialize a max-Performance population
-    perfPops{run} = Population(config.populationProperties{:}, 'C', sc, ...
+    perfPops{run} = Population(config.populationProperties{:}, ...
                                'SelectionCriterion', 'loss');
 
     % clone the population and change selection criterion to psi

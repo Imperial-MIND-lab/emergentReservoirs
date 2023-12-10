@@ -47,20 +47,20 @@ cd(paths.main)
 %% analysis 01C
 % Break recurrence by comparing psi of trained vs. random output.
 
-% get configurations
-config = getConfig('analysis01C', false);
-
-% run analysis
-[results] = analysis01C(config);
-
-% save outputs
-cd(paths.outputs)
-filename = 'analysis01C.mat';
-save(filename, "results", "config")
-cd(paths.main)
-
-% save figures
-savefigs(fullfile(paths.figures, "analysis01C"), "analysis01C", true)
+% % get configurations
+% config = getConfig('analysis01C', false);
+% 
+% % run analysis
+% [results] = analysis01C(config);
+% 
+% % save outputs
+% cd(paths.outputs)
+% filename = 'analysis01C.mat';
+% save(filename, "results", "config")
+% cd(paths.main)
+% 
+% % save figures
+% savefigs(fullfile(paths.figures, "analysis01C"), "analysis01C", true)
 
 %% analysis 02
 % Factors that influence loss-psi relationship

@@ -10,17 +10,23 @@ function [config] = getConfig(analysisName, testRun)
 % -------
 % config (struct) : configurations;
 
+% load human structural connectivity
+path2data = "/home/hanna/Code/projects/2023-MscPhD_emergence/data";
+sc = load(fullfile(path2data, "sc.mat")).sc; 
+
+% initialize output variable
 config = struct();
 
 switch analysisName
     case 'paths'
         config.main = mfilename('fullpath');
         config.main = config.main(1:end-10);                             % path to main.m
-        config.data = fullfile(config.main, "data");                     % path to data
+        config.data = path2data;                                         % path to data
         config.external = fullfile(config.main, "external");             % path to external dependencies
         config.outputs = fullfile(config.main, "outputs", "results");    % path to output directory
         config.figures = fullfile(config.main, "outputs", "figures");    % path to output directory
 
+% Analysis01A configurations -------------------------------------------- %
     case 'analysis01A'
 
         if testRun
@@ -58,5 +64,22 @@ switch analysisName
 
        % set numPopulations to 1 because we're running array jobs
        config.numPopulations = 1;
+
+% Analysis01C configurations -------------------------------------------- %
+    case 'analysis01C'
+
+        if testRun
+            config.reservoirProperties = {'C', sc};
+            config.nTest = 20;
+            config.trainTime = 2000;
+            config.testTime = 1000;
+            config.numRandomizations = 1;
+        else
+            config.reservoirProperties = {'C', sc, 'Env', 'Lorenz'};
+            config.nTest = 100;
+            config.trainTime = 2000;
+            config.testTime = 1000;
+            config.numRandomizations = 10;
+        end
 end
 
