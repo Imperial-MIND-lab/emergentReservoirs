@@ -124,6 +124,14 @@ classdef Population
             idx = find(strcmp(obj.StatsNames, name));
         end
 
+        function obj = makeLossPositive(obj)
+            % Reservoirs store loss as negative value to allow for a
+            % general optimization algorithm that maximizes utility. This
+            % function make loss as stored in StatsLog positive again.
+            obj.StatsLog.Avg(:, obj.find('loss')) = abs(obj.StatsLog.Avg(:, obj.find('loss')));
+            obj.StatsLog.Max(:, obj.find('loss')) = abs(obj.StatsLog.Max(:, obj.find('loss')));
+        end
+
         function obj = evolve(obj, niter)
             % Evolves population for niter generations.
             % preallocate memory for stats propery

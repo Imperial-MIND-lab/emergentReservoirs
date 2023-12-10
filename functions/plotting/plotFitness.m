@@ -91,6 +91,18 @@ for m = 1:length(measures)
              'BoxFaceAlpha', 0.3, 'MarkerColor', [1 1 1].*0.35, 'BoxWidth', 0.25)
     ylabel('Spearman correlation')
     xlabel(measures{m})
+    % scale y limits to sensible range
+    if min(stats.(measures{m}).rho)>0 && max(stats.(measures{m}).rho)>0
+        ylim([0 1])
+    elseif min(stats.(measures{m}).rho)<0 && max(stats.(measures{m}).rho)<0
+        ylim([-1 0])
+    else
+        ylim([-1 1])
+    end
+end
+
+if nargout<1
+    clearvars
 end
 
 end
