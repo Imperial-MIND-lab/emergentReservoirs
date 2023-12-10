@@ -3,6 +3,9 @@ function [perfPops, psiPops] = analysis01A(config)
 % performance - Evolutions of neuromorphic populations selecting for
 % minimal loss or maximal emergence.
 
+% set a unique random number generator seed!
+rng(config.jobID)
+
 % load human structural connectivity
 sc = load("sc.mat").sc;
 
