@@ -5,7 +5,7 @@ addpath(genpath(paths.external))
 addpath(genpath(paths.data))
 addpath(genpath(fullfile(paths.main, "classes")))
 addpath(genpath(fullfile(paths.main, "functions")))
-addpath(genpath(fullfile(paths.main, "scripts")))
+addpath(genpath(fullfile(paths.main, "analyses")))
 
 end
 
