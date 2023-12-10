@@ -11,7 +11,9 @@ function [config] = getConfig(analysisName, testRun)
 % config (struct) : configurations;
 
 % load human structural connectivity
-path2data = "/home/hanna/Code/projects/2023-MscPhD_emergence/data";
+path2main = mfilename('fullpath');
+path2main = path2main(1:end-10);
+path2data = fullfile(path2main, "data");
 sc = load(fullfile(path2data, "sc.mat")).sc; 
 
 % initialize output variable
@@ -19,8 +21,7 @@ config = struct();
 
 switch analysisName
     case 'paths'
-        config.main = mfilename('fullpath');
-        config.main = config.main(1:end-10);                             % path to main.m
+        config.main = path2main;                                         % path to main.m
         config.data = path2data;                                         % path to data
         config.external = fullfile(config.main, "external");             % path to external dependencies
         config.outputs = fullfile(config.main, "outputs", "results");    % path to output directory
