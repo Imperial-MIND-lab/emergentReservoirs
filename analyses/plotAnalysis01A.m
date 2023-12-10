@@ -1,9 +1,15 @@
-function [] = plotAnalysis01A(jobIDs, paths)
+function [] = plotAnalysis01A(jobIDs, paths, saveFigures)
 % Produces plots to visualize the results of analysis01A.
 % Parameters
 % ----------
 % jobIDs : vector of ints with jobIDs (suffix of result filenames)
 % paths: struct with 'outputs' and 'figures' file paths
+
+
+% save figures by default
+if nargin<2
+    saveFigures = true;
+end
 
 % prepare outputs
 numJobs = length(jobIDs);
@@ -28,11 +34,13 @@ for crit = 1:length(criteria)
     plotFitness(pops.(criteria{crit}));
 
     % save plots
-    figname = strcat("analysis01A_", criteria{crit}, "_", datestr(now, 30));
-    savefigs(fullfile(paths.figures, "analysis01A"), figname, true)
-
-    % close figures
-    close all
+    if saveFigures
+        figname = strcat("analysis01A_", criteria{crit}, "_", datestr(now, 30));
+        savefigs(fullfile(paths.figures, "analysis01A"), figname, true)
+    
+        % close figures
+        close all
+    end
 end
 
 
