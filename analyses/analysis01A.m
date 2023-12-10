@@ -29,6 +29,9 @@ for run = 1:config.numPopulations
     disp("Evolving performance population...")
     perfPops{run} = perfPops{run}.evolve(config.numGenerations);
     toc
+
+    % copy input sequence onto parallel emergence population
+    psiPops{run} = psiPops{run}.copyInput(perfPops{run});
     
     % evolve the emergence population
     tic

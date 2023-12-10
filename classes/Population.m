@@ -107,8 +107,8 @@ classdef Population
             score = obj.CurrentStats(idx, obj.Select);
         end
 
-        function obj = copyEnv(obj, population)
-            % Copies input and environment from another population.
+        function obj = copyInput(obj, population)
+            % Copies input sequence from another population.
             assert(strcmp(obj.Env, population.Env), "Population environment types (Env) must match.")
             obj.U = population.U;
         end
