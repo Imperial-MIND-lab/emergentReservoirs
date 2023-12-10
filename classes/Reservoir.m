@@ -161,12 +161,12 @@ classdef Reservoir
         end
 
         function obj = resetWin(obj)
-            % (Re)sets input Weights.
+            % (Re)sets input weights.
             obj.Win = rand(obj.N, obj.D)*2*obj.Sigma-obj.Sigma;
         end
 
         function obj = resetWout(obj)
-            % (Re)sets output Weights.
+            % (Re)sets output weights.
             obj.Wout = zeros(obj.D, obj.N);
         end
 
@@ -405,94 +405,7 @@ classdef Reservoir
             end            
         end
 
-    end
-
-    methods (Access = private)
-        % --------------------------------------------------------------- %
-        % CONSTRUCTOR HELPERS
-
-        function obj = setDefault(obj, property)
-            % Returns default values for Ctype-specific properties.
-            if strcmp(obj.Ctype, 'random')
-                defaults = struct('SR', 0.5, ...
-                                  'Rho', 0.04, ...
-                                  'Beta', 5e-8, ...
-                                  'Sigma', 0.03, ...
-                                  'InBias', 1.7);
-            elseif strcmp(obj.Ctype, 'human')
-                defaults = struct('SR', 0.6, ...
-                                  'Rho', 0.09, ...
-                                  'Beta', 4.5e-8, ...
-                                  'Sigma', 0.02, ...
-                                   'InBias', 1.5);
-            end
-            obj.(property) = defaults.(property);
-        end
-
-        function obj = adjustDensity(obj)
-            % Sets the density of the matrix to a desired level by removing
-            % the weakest weights. FOR SYMMETRIC MATRICES.
-            Emax = 0.5*(obj.N*(obj.N-1))+obj.N;      % max possible number of edges
-            Ed = obj.Rho*(Emax);                     % desired number of edges
-            Ec = nnz(triu(obj.C));                   % current number of edges
-            if Ed < Ec
-                % get linearized upper triangular matrix
-                triuC = obj.C(triu(true(obj.N)));
-                % find indices of all non-zero elements
-                idx = find(triuC);
-                % find indices of k smallest non-zero edges
-                [~, idxmin] = mink(triuC(idx), round(Ec-Ed));
-                % smallest non-zero edges, retaining Ed edges
-                triuC(idx(idxmin)) =0;
-                obj.C = vec2sqmat(triuC, 'triu_withDiag');
-            elseif Ed>Ec
-                disp("Warning: desired C density is higher than current density.")
-                obj.Rho = density_und(obj.C);
-            end
-        end
-
-        function obj = damage(obj, rho)
-            % Sets the density of the matrix to a desired level by removing
-            % randomly selected weights. FOR SYMMETRIC MATRICES.
-
-            assert(rho<obj.Rho, 'Error: current density is lower than requested.')
-            Emax = 0.5*(obj.N*(obj.N-1))+obj.N;      % max possible number of edges
-            Ed = rho*(Emax);                         % desired number of edges
-            Ec = nnz(triu(obj.C));                   % current number of edges
-
-            assert(Ed<Ec, 'Error: current numer of edges is lower than requested.')
-            % get linearized upper triangular matrix
-            triuC = obj.C(triu(true(obj.N)));
-            % find indices of all non-zero elements
-            idx = find(triuC);
-            % randomly cut non-zero edges, retaining Ed edges
-            idx = idx(randperm(length(idx), round(Ec-Ed)));                
-            triuC(idx) =0;
-            obj.C = vec2sqmat(triuC, 'triu_withDiag'); 
-            
-            % reset density property
-            obj.Rho = density_und(obj.C);
-        end
-
-        function obj = scaleWeights(obj)
-            % Scales the weights of the connectivity matrix to obtain the
-            % desired spectral radius.
-            obj.C = obj.C./max(obj.C(:));
-            sr = abs(eigs(obj.C, 1, 'lm'));
-            obj.C = (obj.SR/sr).*obj.C;
-            obj.C(eye(size(obj.C))==1) = 0; % no self-reference
-        end
-
-        function obj = adjustC(obj)
-            % Adjusts C according to Rho and SR.
-            % first reset C to the original, to make sure that density
-            % isn't too low to be adjusted (can only be reduced).
-            obj.C = obj.OrigC;          
-            obj = obj.adjustDensity;
-            obj = obj.scaleWeights;
-        end
-
-        % --------------------------------------------------------------- %
+    % --------------------------------------------------------------- %
         % UPDATE RULES
 
         function obj = reset(obj)
@@ -593,6 +506,93 @@ classdef Reservoir
             [psi, vmi, xmi] = computeEmergence(o, R, obj.Tau);
             loss = computeLoss(o, utest);
             results = [psi, vmi, xmi, -loss];
+        end
+
+    end
+
+    methods (Access = private)
+        % --------------------------------------------------------------- %
+        % CONSTRUCTOR HELPERS
+
+        function obj = setDefault(obj, property)
+            % Returns default values for Ctype-specific properties.
+            if strcmp(obj.Ctype, 'random')
+                defaults = struct('SR', 0.5, ...
+                                  'Rho', 0.04, ...
+                                  'Beta', 5e-8, ...
+                                  'Sigma', 0.03, ...
+                                  'InBias', 1.7);
+            elseif strcmp(obj.Ctype, 'human')
+                defaults = struct('SR', 0.6, ...
+                                  'Rho', 0.09, ...
+                                  'Beta', 4.5e-8, ...
+                                  'Sigma', 0.02, ...
+                                   'InBias', 1.5);
+            end
+            obj.(property) = defaults.(property);
+        end
+
+        function obj = adjustDensity(obj)
+            % Sets the density of the matrix to a desired level by removing
+            % the weakest weights. FOR SYMMETRIC MATRICES.
+            Emax = 0.5*(obj.N*(obj.N-1))+obj.N;      % max possible number of edges
+            Ed = obj.Rho*(Emax);                     % desired number of edges
+            Ec = nnz(triu(obj.C));                   % current number of edges
+            if Ed < Ec
+                % get linearized upper triangular matrix
+                triuC = obj.C(triu(true(obj.N)));
+                % find indices of all non-zero elements
+                idx = find(triuC);
+                % find indices of k smallest non-zero edges
+                [~, idxmin] = mink(triuC(idx), round(Ec-Ed));
+                % smallest non-zero edges, retaining Ed edges
+                triuC(idx(idxmin)) =0;
+                obj.C = vec2sqmat(triuC, 'triu_withDiag');
+            elseif Ed>Ec
+                disp("Warning: desired C density is higher than current density.")
+                obj.Rho = density_und(obj.C);
+            end
+        end
+
+        function obj = damage(obj, rho)
+            % Sets the density of the matrix to a desired level by removing
+            % randomly selected weights. FOR SYMMETRIC MATRICES.
+
+            assert(rho<obj.Rho, 'Error: current density is lower than requested.')
+            Emax = 0.5*(obj.N*(obj.N-1))+obj.N;      % max possible number of edges
+            Ed = rho*(Emax);                         % desired number of edges
+            Ec = nnz(triu(obj.C));                   % current number of edges
+
+            assert(Ed<Ec, 'Error: current numer of edges is lower than requested.')
+            % get linearized upper triangular matrix
+            triuC = obj.C(triu(true(obj.N)));
+            % find indices of all non-zero elements
+            idx = find(triuC);
+            % randomly cut non-zero edges, retaining Ed edges
+            idx = idx(randperm(length(idx), round(Ec-Ed)));                
+            triuC(idx) =0;
+            obj.C = vec2sqmat(triuC, 'triu_withDiag'); 
+            
+            % reset density property
+            obj.Rho = density_und(obj.C);
+        end
+
+        function obj = scaleWeights(obj)
+            % Scales the weights of the connectivity matrix to obtain the
+            % desired spectral radius.
+            obj.C = obj.C./max(obj.C(:));
+            sr = abs(eigs(obj.C, 1, 'lm'));
+            obj.C = (obj.SR/sr).*obj.C;
+            obj.C(eye(size(obj.C))==1) = 0; % no self-reference
+        end
+
+        function obj = adjustC(obj)
+            % Adjusts C according to Rho and SR.
+            % first reset C to the original, to make sure that density
+            % isn't too low to be adjusted (can only be reduced).
+            obj.C = obj.OrigC;          
+            obj = obj.adjustDensity;
+            obj = obj.scaleWeights;
         end
 
     end
