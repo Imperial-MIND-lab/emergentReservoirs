@@ -174,6 +174,10 @@ classdef Population
                     obj = obj.takeLog;
                 end
             end
+
+            % flip the sign of loss in StatsLog from - to +
+            obj = obj.makeLossPositive;
+
         end
 
     end
