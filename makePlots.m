@@ -7,11 +7,25 @@ if nargin<3
     saveFigures = true;
 end
 
-if any(strcmpi(analyses, "analysis01A"))
+% strcmp/strcmpi only works with cell arrays if cell items are chars!
+if iscell(analyses)
+    for a = 1:length(analyses)
+        analyses{a} = convertStringsToChars(analyses{a});
+    end
+end
+
+% plot analysis01A results
+if any(strcmpi(analyses, 'analysis01A'))
     % make plots for Lorenz attractor prediction optimization
     plotAnalysis01A(1:10, paths, saveFigures)
     % make plots for Sprott attractor prediction optimizations
     plotAnalysis01A(11:20, paths, saveFigures)
+end
+
+% plot analysis01C results
+if any(strcmpi(analyses, 'analysis01C'))
+    % make plots for loss and psi optimized Reservoirs
+    plotAnalysis01C(1:2, paths, true)
 end
 
 end
