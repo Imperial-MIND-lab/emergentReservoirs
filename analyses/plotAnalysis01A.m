@@ -7,7 +7,7 @@ function [] = plotAnalysis01A(jobIDs, paths, saveFigures)
 
 
 % save figures by default
-if nargin<2
+if nargin<3
     saveFigures = true;
 end
 
