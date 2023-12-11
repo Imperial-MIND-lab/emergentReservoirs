@@ -26,11 +26,20 @@ for m = 1:length(measures)
         yyaxis left
         plot(logTimes, pop.StatsLog.Avg(:, pop.find(measures{m})), '-k')
         ylabel(measures{m})
+        
+        % % get info about some cases where emergence results are complex
+        % indices = [pop.find('psi'), pop.find('vmi'), pop.find('xmi')];
+        % if ~isreal(pop.StatsLog.Avg(:, indices))
+        %     disp(strcat("avg: population number ", num2str(p)))
+        %     disp(pop.StatsLog.Avg(end, :))
+        % end
+
         % psi on the right axis
         yyaxis right
-        plot(logTimes, pop.StatsLog.Avg(:, pop.find('psi')), '-r')
+        plot(logTimes, real(pop.StatsLog.Avg(:, pop.find('psi'))), '-r')
         ylabel('psi')
     end
+    title(strcat("selection: ", pop.SelectionCriterion))
     xlabel('generation')
     grid on
     hold off
@@ -47,13 +56,14 @@ for p = 1:numPops
     logTimes = [1, pop.LogFreq:pop.LogFreq:pop.Generation];
     % plot Xmi on the left axis
     yyaxis left
-    plot(logTimes, pop.StatsLog.Avg(:, pop.find('xmi')), '-k')
+    plot(logTimes, real(pop.StatsLog.Avg(:, pop.find('xmi'))), '-k')
     ylabel('Xmi')
     % Vmi on the right axis
     yyaxis right
-    plot(logTimes, pop.StatsLog.Avg(:, pop.find('vmi')), '-r')
+    plot(logTimes, real(pop.StatsLog.Avg(:, pop.find('vmi'))), '-r')
     ylabel('Vmi')
 end
+title(strcat("selection: ", pop.SelectionCriterion))
 xlabel('generation')
 grid on
 hold off
@@ -65,8 +75,8 @@ for m = 1:length(measures)
     hold on
     for p = 1:numPops
         pop = populations{p};
-        x = pop.StatsLog.Avg(:, pop.find('psi'));
-        y = pop.StatsLog.Avg(:, pop.find(measures{m}));
+        x = real(pop.StatsLog.Avg(:, pop.find('psi')));
+        y = real(pop.StatsLog.Avg(:, pop.find(measures{m})));
         scatter(x, y, ...
           'MarkerEdgeColor' , 'none', ... 
           'MarkerFaceColor' , colours(p,:), ...
@@ -79,6 +89,7 @@ for m = 1:length(measures)
     end
     ylabel(measures{m})
     xlabel('psi')
+    title(strcat("selection: ", pop.SelectionCriterion))
     grid on
     hold off
     stats.fdr.(measures{m}) = fdr(stats.(measures{m}).pval);
@@ -92,13 +103,19 @@ for m = 1:length(measures)
     ylabel('Spearman correlation')
     xlabel(measures{m})
     % scale y limits to sensible range
-    if min(stats.(measures{m}).rho)>0 && max(stats.(measures{m}).rho)>0
-        ylim([0 1])
-    elseif min(stats.(measures{m}).rho)<0 && max(stats.(measures{m}).rho)<0
-        ylim([-1 0])
+    minVal = min(stats.(measures{m}).rho);
+    maxVal = max(stats.(measures{m}).rho);
+    if minVal>0 && maxVal>0
+        ylim([max(0, minVal-0.1) min(1, maxVal+0.1)])
+        % ylim([0 1])
+    elseif minVal<0 && maxVal<0
+        ylim([max(-1, minVal-0.1) min(0, maxVal+0.1)])
+        % ylim([-1 0])
     else
-        ylim([-1 1])
+        ylim([max(-1, minVal-0.1) min(1, maxVal+0.1)])
+        % ylim([-1 1])
     end
+    title(strcat("selection: ", pop.SelectionCriterion))
 end
 
 if nargout<1

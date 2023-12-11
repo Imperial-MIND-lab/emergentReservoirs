@@ -19,7 +19,7 @@ pops.loss = {};
 % load evolved populations
 for job = 1:numJobs
     filename = strcat("analysis01A_", num2str(jobIDs(job)), ".mat");
-    disp(strcat("loading ", filename))
+    %disp(strcat("loading ", filename))
     pops.psi = [pops.psi(:)', load(fullfile(paths.outputs, "analysis01A", filename)).psiPops(:)'];
     pops.loss = [pops.loss(:)', load(fullfile(paths.outputs, "analysis01A", filename)).perfPops(:)'];
 end
@@ -33,15 +33,20 @@ for crit = 1:length(criteria)
     % plot fitness trajectories
     plotFitness(pops.(criteria{crit}));
 
+    % fetch the environment name
+    envName = pops.(criteria{crit}){1}.Env;
+    if strcmp(envName(1:end-1), "Sprott")
+        envName = "Sprott";
+    end
+
     % save plots
     if saveFigures
-        figname = strcat("analysis01A_", criteria{crit}, "_", datestr(now, 30));
+        figname = strcat("analysis01A_", criteria{crit}, "_", envName);
         savefigs(fullfile(paths.figures, "analysis01A"), figname, true)
     
         % close figures
         close all
     end
 end
-
 
 end
