@@ -4,6 +4,9 @@ function [] = main(analyses, jobID, testRun)
 if nargin<3
     testRun=false;
 end
+if nargin==0
+    analyses={};
+end
 
 % get default paths
 paths = getConfig('paths');
