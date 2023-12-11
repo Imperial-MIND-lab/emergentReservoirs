@@ -78,13 +78,15 @@ switch analysisName
     case 'analysis01C'
 
         if testRun
-            config.reservoirProperties = {'C', sc};
-            config.nTest = 20;
+            config.reservoirProperties = {'C', sc, 'Env', 'Lorenz'};
+            config.optimisedFor = {'loss', 'psi'};
+            config.nTest = 2;
             config.trainTime = 2000;
             config.testTime = 1000;
             config.numRandomizations = 1;
         else
             config.reservoirProperties = {'C', sc, 'Env', 'Lorenz'};
+            config.optimisedFor = {'loss', 'psi'};
             config.nTest = 100;
             config.trainTime = 2000;
             config.testTime = 1000;
