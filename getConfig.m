@@ -10,6 +10,14 @@ function [config] = getConfig(analysisName, testRun)
 % -------
 % config (struct) : configurations;
 
+% set defaults
+if nargin==0
+    analysisName = 'none';
+    testRun = true;
+elseif nargin<2
+    testRun = true;
+end
+
 % load human structural connectivity
 path2main = mfilename('fullpath');
 path2main = path2main(1:end-10);
@@ -82,5 +90,13 @@ switch analysisName
             config.testTime = 1000;
             config.numRandomizations = 10;
         end
+
+% default output is structural connectivity ----------------------------- %
+    otherwise
+        config.C = sc;
+
+end
+
+
 end
 
