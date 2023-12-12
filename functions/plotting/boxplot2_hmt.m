@@ -28,8 +28,7 @@ end
 % test for group differences
 pairCount = 1;
 for pair = pairPositions
-    leftBox = left(bp==pair);
-    s = mes(x(leftBox), x(~leftBox), 'hedgesg', 'isDep', isDep, 'nBoot', 10000);
+    s = mes(x(and(bp==pair, left)), x(and(bp==pair, ~left)), 'hedgesg', 'isDep', isDep, 'nBoot', 10000);
     stats.(names{pairCount}) = s.t(:);
     stats.(names{pairCount}).hedgesg = s.hedgesg;
     pairCount = pairCount+1;
