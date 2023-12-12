@@ -28,6 +28,7 @@ end
 
 %% analysis 01A (neuromorphic) + 03A (neuromorphic vs. random)
 % Relationship between emergence and prediction performance
+% (run with JobIDs 1-20)
 
 if any(strcmpi(analyses, 'analysis01A'))
     % get configurations
@@ -58,6 +59,7 @@ end
 
 %% analysis 01C
 % Break recurrence by comparing psi of trained vs. random output.
+% (run with JobIDs 1-2)
 
 if any(strcmpi(analyses, 'analysis01C'))
     % get configurations
@@ -69,7 +71,7 @@ if any(strcmpi(analyses, 'analysis01C'))
     
     % run analysis
     tic
-    [results] = analysis01C(config);
+    results = analysis01C(config);
     toc
     
     % save outputs
@@ -84,8 +86,29 @@ if any(strcmpi(analyses, 'analysis01C'))
     cd(paths.main)
 end
 
-%% analysis 02
-% Factors that influence loss-psi relationship
+%% analysis 02A
+% Generalisability of loss- versus psi-optimised reservoirs
+% (run as single job, i.e. jobID = 1)
+
+if any(strcmpi(analyses, 'analysis02A'))
+    % get configurations
+    config = getConfig('analysis02A', testRun);
+
+    % run analysis
+    tic
+    results = analysis02A(config);
+    toc
+    
+    % save outputs
+    cd(paths.outputs)
+    if ~exist("analysis02A", "dir")
+        mkdir analysis02A
+    end
+    cd analysis02A
+    filename = ['analysis02A_', num2str(jobID), '.mat'];
+    save(filename, "results", "config")
+    cd(paths.main)
+end
 
 %% analysis 03
 % Emergence, prediction and the human brain topology

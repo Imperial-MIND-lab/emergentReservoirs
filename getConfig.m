@@ -93,6 +93,23 @@ switch analysisName
             config.numRandomizations = 10;
         end
 
+% Analysis02A configurations -------------------------------------------- %
+    case 'analysis02A'
+
+        if testRun
+            config.reservoirProperties = {'C', sc};
+            config.environments = {'Lorenz', 'SprottA'};
+            config.repetitions = 10;
+            config.trainTime = 2000;
+            config.testTime = 1000;
+        else
+            config.reservoirProperties = {'C', sc};
+            config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC'};
+            config.repetitions = 100;
+            config.trainTime = 2000;
+            config.testTime = 1000;
+        end
+
 % default output is structural connectivity ----------------------------- %
     otherwise
         config.C = sc;
