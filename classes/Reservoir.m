@@ -156,7 +156,7 @@ classdef Reservoir
         end
 
         function obj = setEnv(obj, envName)
-            % change environment (input system)
+            % Changes environment (input system).
             obj.Env = envName;
             % adjust input dimension according to new environment
             env = eval(envName);

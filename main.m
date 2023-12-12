@@ -110,6 +110,30 @@ if any(strcmpi(analyses, 'analysis02A'))
     cd(paths.main)
 end
 
+%% analysis 02B
+% Further checks of loss-psi relationship in the context of generalisability
+% (run as single job, i.e. jobID = 1)
+
+if any(strcmpi(analyses, 'analysis02B'))
+    % get configurations
+    config = getConfig('analysis02B', testRun);
+
+    % run analysis
+    tic
+    results = analysis02B(config);
+    toc
+    
+    % save outputs
+    cd(paths.outputs)
+    if ~exist("analysis02B", "dir")
+        mkdir analysis02B
+    end
+    cd analysis02B
+    filename = ['analysis02B_', num2str(jobID), '.mat'];
+    save(filename, "results", "config")
+    cd(paths.main)
+end
+
 %% analysis 03
 % Emergence, prediction and the human brain topology
 

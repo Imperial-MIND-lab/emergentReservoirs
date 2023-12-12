@@ -113,15 +113,32 @@ classdef Population
             obj.U = population.U;
         end
 
+        function obj = setEnv(obj, envName)
+            % Changes the environment of the population, if possible.
+            obj.Env = envName;
+            % reset input sequences of previous environment
+            obj.U.train = [];
+            obj.U.test = [];
+            % change environment of all reservoirs in the population
+            for idx = 1:obj.Size
+                obj.Reservoirs{idx} = obj.Reservoirs{idx}.setEnv(envName);
+            end
+        end
+
+        function stats = getStats(obj, statName)
+            % Access current evaluation results of all reservoirs by str name.
+            stats = obj.CurrentStats(:, obj.find(statName));
+        end
+
         function obj = setSelectionCriterion(obj, criterion)
             % Sets a different selection criterion.
             obj.SelectionCriterion = criterion;
             obj.Select = find(strcmp(obj.StatsNames, obj.SelectionCriterion));
         end
 
-        function idx = find(obj, name)
+        function idx = find(obj, statName)
             % Returns index of selection criterion option in Stats arrays.
-            idx = find(strcmp(obj.StatsNames, name));
+            idx = find(strcmp(obj.StatsNames, statName));
         end
 
         function obj = makeLossPositive(obj)
@@ -132,6 +149,18 @@ classdef Population
             obj.StatsLog.Max(:, obj.find('loss')) = abs(obj.StatsLog.Max(:, obj.find('loss')));
         end
 
+        function obj = evaluate(obj, indices)
+            % Evaluates reservoirs with given index in the population.
+            % generate inputs, if they are empty
+            if isempty(obj.U.train) || isempty(obj.U.test)
+                obj = obj.initU; 
+            end
+            for idx = indices
+                obj.Reservoirs{idx} = obj.Reservoirs{idx}.evaluate(obj.U.train, obj.U.test);
+                obj = obj.updateStats(idx);
+            end
+        end
+
         function obj = evolve(obj, niter)
             % Evolves population for niter generations.
             % preallocate memory for stats propery
@@ -139,10 +168,6 @@ classdef Population
 
             % compute fitness of all genotypes upon initialization
             if obj.Generation == 1
-                % generate inputs, if they are empty
-                if isempty(obj.U.train) || isempty(obj.U.test)
-                    obj = obj.initU; 
-                end
                 obj = obj.evaluate(1:obj.Size);
                 obj = obj.takeLog;
                 niter = niter-1;
@@ -266,14 +291,6 @@ classdef Population
             obj.StatsLog.Avg(idx, :) = mean(obj.CurrentStats, 1);
             obj.StatsLog.Std(idx, :) = std(obj.CurrentStats, 0, 1);
             obj.StatsLog.Max(idx, :) = max(obj.CurrentStats, [], 1);
-        end
-
-        function obj = evaluate(obj, indices)
-            % Evaluates reservoirs with given index in the population.
-            for idx = indices
-                obj.Reservoirs{idx} = obj.Reservoirs{idx}.evaluate(obj.U.train, obj.U.test);
-                obj = obj.updateStats(idx);
-            end
         end
 
         function [winner, loser] = tournament(obj)
