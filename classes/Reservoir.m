@@ -150,6 +150,11 @@ classdef Reservoir
             idx = find(strcmpi(obj.ResultNames, resultName));
         end
 
+        function obj = makeLossPositive(obj)
+            % Makes loss evaluation result positive.
+            obj.Results(obj.find('loss')) = abs(obj.Results(obj.find('loss')));
+        end
+
         function obj = setEnv(obj, envName)
             % change environment (input system)
             obj.Env = envName;
