@@ -4,7 +4,7 @@ function [] = main(analyses, jobID, testRun)
 if nargin<3
     testRun=false;
 end
-if nargin==0 || isempty("analyses", "var")
+if nargin==0 || isempty(analyses)
     %analyses={};
     analyses = 'analysis02A2';
 end
