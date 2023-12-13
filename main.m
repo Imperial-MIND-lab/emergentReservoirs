@@ -4,8 +4,9 @@ function [] = main(analyses, jobID, testRun)
 if nargin<3
     testRun=false;
 end
-if nargin==0
-    analyses={};
+if nargin==0 || isempty("analyses", "var")
+    %analyses={};
+    analyses = 'analysis02A2';
 end
 
 % get default paths
