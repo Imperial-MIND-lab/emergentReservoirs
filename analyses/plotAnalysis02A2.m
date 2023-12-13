@@ -38,42 +38,16 @@ for job = 1:length(jobIDs)
         end
 
         % make distribution plots
-        figure; 
-        al_goodplot(perfPopResults, [], [], [1 1 1]*0.65, 'left'); 
-        al_goodplot(psiPopResults, [], [], [1 0 0]*0.75, 'right')
+        stats = goodplot2_hmt(perfPopResults, psiPopResults, 1, config.environments);
         ylabel(om)
+        stats.environments = config.environments';
 
-        % compute statistics
-        s = mes(perfPopResults, psiPopResults, 'hedgesg', 'isDep', 1, 'nBoot', 10000);
-        stats.tstat = s.t.tstat';
-        stats.p = s.t.p';
-        stats.df = s.t.df';
-        stats.hedgesg = s.hedgesg';
-        stats.environment = config.environments';
-
-        % scale y-axis limits to make space for asterisks
-        maxX = max([perfPopResults(:); psiPopResults(:)]);
-        minX = min([perfPopResults(:); psiPopResults(:)]);
-        yOffset = (maxX-minX)*0.15;
-        ylim([minX-0.5*yOffset maxX+yOffset])
-
-        % add asterisks to plot if p<0.05
-        for env = 1:numEnvs
-            % fetch asterisk label according to significance
-            asterisk = get_asterisk(stats.p(env));
-            % add asterisk label to plot
-            label = text(env, maxX+0.5*yOffset, asterisk, 'Fontsize', 14);
-            set(label,'HorizontalAlignment','center','VerticalAlignment','middle');
-        end
-
-        % save plots
+        % save plots and stats
         if saveFigures
             figpath = fullfile(paths.figures, "analysis02A2");
-            figname = strcat("analysis02A2_", outcomeMeasures{m});
+            figname = strcat("analysis02A2_", num2str(job), "_", om);
             savefigs(figpath, figname, true)
-            % close figures
             close all
-            % save stats for each boxplot pair as csv files
             cd(figpath)
             writetable(struct2table(stats), strcat(figname, ".csv"))
             cd(paths.main)
