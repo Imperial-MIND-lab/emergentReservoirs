@@ -27,11 +27,15 @@ if nargin<5
     colours = [1 1 1; 1 0 0]*0.65;
 end
 
+% get number of distribution pairs
+numPairs = size(Xl, 2);
+
 % make distribution plots
 figure; 
 al_goodplot(Xl, [], [], colours(1,:), 'left'); 
 al_goodplot(Xr, [], [], colours(2,:), 'right');
-set(gca, 'XTickLabel', names)
+xlim([0 numPairs+1])
+set(gca, 'XTick', 1:numPairs, 'XTickLabel', names)
 
 % compute statistics
 s = mes(Xl, Xr, 'hedgesg', 'isDep', isDep, 'nBoot', 10000);
