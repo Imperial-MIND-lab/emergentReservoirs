@@ -112,12 +112,12 @@ for job = 1:length(jobIDs)
         for env = 1:numEnvs
             thisEnv = config.environments{env};
 
-            % extract data and create grouping variable
-            x = results.(om).(thisEnv)(:);
-            g = kron([1 2], ones(1, config.repetitions))';
+            % extract y data and generate x positions
+            y = results.(om).(thisEnv)(:);
+            x = kron([1 2], ones(1, config.repetitions))';
 
             % plot and compute stats
-            stats = boxplot_hmt(x,g==1,1,{'minLoss', 'maxPsi'});
+            stats = boxplot_hmt(y, x, 1, {'minLoss', 'maxPsi'});
             ylabel([om, ' (', thisEnv,')'])
             stats.environment = thisEnv;
         
