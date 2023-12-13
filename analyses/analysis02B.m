@@ -1,4 +1,4 @@
-function [results] = analysis02B(config)
+function results = analysis02B(config)
 % Runs analysis 02B: Initialise a large population of (neuromorphic)
 % reservoirs, evaluate their performance on the Lorenz attractor prediction
 % task, evaluate their performance on another prediction task (SprottA, B,
@@ -16,29 +16,22 @@ function [results] = analysis02B(config)
 % results (struct) with fields
 %   lossLorenz, lossSprottA, psiSprottA, lossSprottB, psiSprottB...
 
+% fix random seed (to ensure that the population is initialised the same
+% for all environments)
+rng(99)
+
 % get some parameters for convenience
 numEnvs = length(config.environments);
 
 % create output variable
 results = struct();
 
-% initialize a large population of reservoirs with Lorenz environment
-population = Population(config.populationProperties{:}, 'Env', 'Lorenz');
-
-% evaluate all the reservoirs in the population
-population = population.evaluate(1:population.Size);
-
-% fetch loss and psi results of all reservoirs and normalize
-results.lossLorenz = abs(population.getStats('loss'));
-results.psiLorenz = population.getStats('psi');
-
-% re-evalutate population on each alternative environment
 for env = 1:numEnvs
-    % change the environment of the population
+    % initialize a large population of reservoirs with this environment
     thisEnv = config.environments{env};
-    population = population.setEnv(thisEnv);
+    population = Population(config.populationProperties{:}, 'Env', thisEnv);
 
-    % evaluate reservoirs in new environment
+    % evaluate reservoirs in environment
     population = population.evaluate(1:population.Size);
 
     % fetch loss and psi results

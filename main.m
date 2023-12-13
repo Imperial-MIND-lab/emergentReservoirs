@@ -112,17 +112,20 @@ end
 
 %% analysis 02B
 % Further checks of loss-psi relationship in the context of generalisability
-% (run as single job, i.e. jobID = 1)
+% (run with jobIDs 1-6)
 
 if any(strcmpi(analyses, 'analysis02B'))
     % get configurations
     config = getConfig('analysis02B', testRun);
 
+    % get environments for this job
+    config.environments = config.environments(jobID);
+
     % run analysis
     tic
     results = analysis02B(config);
     toc
-    
+   
     % save outputs
     cd(paths.outputs)
     if ~exist("analysis02B", "dir")
