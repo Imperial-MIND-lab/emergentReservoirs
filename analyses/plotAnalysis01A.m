@@ -2,7 +2,7 @@ function [] = plotAnalysis01A(jobIDs, paths, saveFigures)
 % Produces plots to visualize the results of analysis01A.
 % Parameters
 % ----------
-% jobIDs : vector of ints with jobIDs (suffix of result filenames)
+% jobIDs : vector of ints with jobIDs (run with jobIDs = 1:10 or 11:20)
 % paths: struct with 'outputs' and 'figures' file paths
 
 
