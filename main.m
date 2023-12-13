@@ -86,13 +86,13 @@ if any(strcmpi(analyses, 'analysis01C'))
     cd(paths.main)
 end
 
-%% analysis 02A
-% Generalisability of loss- versus psi-optimised reservoirs
+%% analysis 02A1
+% Generalisability of loss- versus psi-optimised reservoirs (version 1)
 % (run as single job, i.e. jobID = 1)
 
-if any(strcmpi(analyses, 'analysis02A'))
+if any(strcmpi(analyses, 'analysis02A1'))
     % get configurations
-    config = getConfig('analysis02A', testRun);
+    config = getConfig('analysis02A1', testRun);
 
     % run analysis
     tic
@@ -101,11 +101,42 @@ if any(strcmpi(analyses, 'analysis02A'))
     
     % save outputs
     cd(paths.outputs)
-    if ~exist("analysis02A", "dir")
-        mkdir analysis02A
+    if ~exist("analysis02A1", "dir")
+        mkdir analysis02A1
     end
     cd analysis02A
-    filename = ['analysis02A_', num2str(jobID), '.mat'];
+    filename = ['analysis02A1_', num2str(jobID), '.mat'];
+    save(filename, "results", "config")
+    cd(paths.main)
+end
+
+%% analysis 02A2
+% Generalisability of loss- versus psi-optimised reservoirs (version 2)
+% (run with jobIDs 1-10)
+
+if any(strcmpi(analyses, 'analysis02A2'))
+    % get configurations
+    config = getConfig('analysis02A2', testRun);
+
+    % load evolved populations
+    filename = strcat("analysis01A_", num2str(jobID), ".mat");
+    config.psiPop = load(fullfile(paths.outputs, "analysis01A", filename)).psiPops{1};
+    config.perfPop = load(fullfile(paths.outputs, "analysis01A", filename)).perfPops{1};
+
+    % run analysis
+    tic
+    results = analysis02A2(config);
+    toc
+    
+    % save outputs
+    cd(paths.outputs)
+    if ~exist("analysis02A2", "dir")
+        mkdir analysis02A2
+    end
+    cd analysis02A2
+    config.popSize = config.psiPop.Size; % save population size
+    config = rmfield(config, {'psiPop', 'perfPop'}); % don't save populations
+    filename = ['analysis02A2_', num2str(jobID), '.mat'];
     save(filename, "results", "config")
     cd(paths.main)
 end

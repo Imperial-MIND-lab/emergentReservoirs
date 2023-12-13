@@ -1,5 +1,5 @@
-function [results] = analysis02A(config)
-% Runs analysis 02A: Train and evaluate the best solutions from i) the
+function [results] = analysis02A1(config)
+% Runs analysis 02A (version 1): Train and evaluate the best solutions from i) the
 % loss-minimizing evolution and ii) the psi-maximizing evolution on various
 % input systems (Lorenz and various Sprott attractors). Compare results.
 % Parameters

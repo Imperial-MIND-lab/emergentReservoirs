@@ -15,7 +15,7 @@ if nargin==0
     analysisName = 'none';
     testRun = true;
 elseif nargin<2
-    testRun = true;
+    testRun = false;
 end
 
 % load human structural connectivity
@@ -93,8 +93,8 @@ switch analysisName
             config.numRandomizations = 10;
         end
 
-% Analysis02A configurations -------------------------------------------- %
-    case 'analysis02A'
+% Analysis02A1 configurations ------------------------------------------- %
+    case 'analysis02A1'
 
         if testRun
             config.reservoirProperties = {'C', sc};
@@ -106,6 +106,21 @@ switch analysisName
             config.reservoirProperties = {'C', sc};
             config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC'};
             config.repetitions = 100;
+            config.trainTime = 2000;
+            config.testTime = 1000;
+        end
+
+% Analysis02A2 configurations ------------------------------------------- %
+    case 'analysis02A2'
+
+        if testRun
+            config.environments = {'Lorenz', 'SprottA'};
+            config.nTest = 1;
+            config.trainTime = 2000;
+            config.testTime = 1000;
+        else
+            config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC'};
+            config.nTest = 100;
             config.trainTime = 2000;
             config.testTime = 1000;
         end

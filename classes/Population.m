@@ -113,12 +113,23 @@ classdef Population
             obj.U = population.U;
         end
 
+        function obj = resetInput(obj)
+            % Resets input to empty vectors.
+            obj.U.train = [];
+            obj.U.test = [];
+        end
+
+        function obj = setnTest(obj, nTest)
+            % Change the default number of evaluations of the population.
+            obj.nTest = nTest;
+            obj = obj.resetInput;
+        end
+
         function obj = setEnv(obj, envName)
             % Changes the environment of the population, if possible.
             obj.Env = envName;
             % reset input sequences of previous environment
-            obj.U.train = [];
-            obj.U.test = [];
+            obj = obj.resetInput;
             % change environment of all reservoirs in the population
             for idx = 1:obj.Size
                 obj.Reservoirs{idx} = obj.Reservoirs{idx}.setEnv(envName);
@@ -127,7 +138,12 @@ classdef Population
 
         function stats = getStats(obj, statName)
             % Access current evaluation results of all reservoirs by str name.
-            stats = obj.CurrentStats(:, obj.find(statName));
+            if strcmpi(statName, 'loss')
+                % return loss as positive value
+                stats = abs(obj.CurrentStats(:, obj.find(statName)));
+            else
+                stats = obj.CurrentStats(:, obj.find(statName));
+            end
         end
 
         function obj = setSelectionCriterion(obj, criterion)
