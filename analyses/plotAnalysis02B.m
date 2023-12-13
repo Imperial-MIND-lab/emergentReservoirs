@@ -55,7 +55,8 @@ for env = 1:numEnvs
     thisEnv = environments{env};
 
     % linear model
-    lm = fitlm(tbl, ['loss', thisEnv, '~lossLorenz+psiLorenz']);
+    modelSpec = ['loss', thisEnv, '~lossLorenz+psiLorenz'];
+    lm = fitlm(tbl, modelSpec);
 
     % fetch data to plot
     regressors = {'lossLorenz', 'psiLorenz'};
@@ -73,6 +74,7 @@ for env = 1:numEnvs
     figure();
     piechart(betas./max(betas), chartLabels)
     colororder(colours([25, 75], :));
+    title(modelSpec)
 
     % save plots
     if saveFigures
