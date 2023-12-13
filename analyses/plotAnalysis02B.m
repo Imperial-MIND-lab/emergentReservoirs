@@ -2,7 +2,7 @@ function [] = plotAnalysis02B(jobIDs, paths, saveFigures)
 % Produces plots to visualize the results of analysis02B.
 % Parameters
 % ----------
-% jobIDs : vector of ints with jobIDs (suffix of result filenames)
+% jobIDs : vector of ints with jobIDs (run with 1:6)
 % paths: struct with 'outputs' and 'figures' file paths
 
 % save figures by default
@@ -40,10 +40,10 @@ for job = jobIDs
 
 end
 
-% standardize all data in the table
-for col = 1:size(tbl, 2)
-    tbl(:, col) = (tbl(:, col)-mean(tbl(:, col)))./std(tbl(:, col));
-end
+% % standardize all data in the table
+% for col = 1:size(tbl, 2)
+%     tbl(:, col) = (tbl(:, col)-mean(tbl(:, col)))./std(tbl(:, col));
+% end
 
 % get number of Sprott environments
 numEnvs = length(environments);
@@ -79,7 +79,7 @@ for env = 1:numEnvs
     % save plots
     if saveFigures
         figpath = fullfile(paths.figures, "analysis02B");
-        figname = strcat("analysis02B_", thisEnv);
+        figname = strcat("analysis02B_nonStandard_", thisEnv);
         savefigs(figpath, figname, true)
         % close figures
         close all
