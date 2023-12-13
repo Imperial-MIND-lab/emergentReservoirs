@@ -5,8 +5,8 @@ if nargin<3
     testRun=false;
 end
 if nargin==0 || isempty(analyses)
-    %analyses={};
-    analyses = 'analysis02A2';
+    analyses={};
+    %analyses = 'analysis02A2';
 end
 
 % get default paths
@@ -105,7 +105,7 @@ if any(strcmpi(analyses, 'analysis02A1'))
     if ~exist("analysis02A1", "dir")
         mkdir analysis02A1
     end
-    cd analysis02A
+    cd analysis02A1
     filename = ['analysis02A1_', num2str(jobID), '.mat'];
     save(filename, "results", "config")
     cd(paths.main)
