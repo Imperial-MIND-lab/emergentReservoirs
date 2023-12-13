@@ -124,7 +124,7 @@ for job = 1:length(jobIDs)
             % save plots
             if saveFigures
                 figpath = fullfile(paths.figures, "analysis02A1");
-                figname = strcat("analysis02A1_box1_", outcomeMeasures{m});
+                figname = strcat("analysis02A1_box1_", thisEnv, "_", outcomeMeasures{m});
                 savefigs(figpath, figname, true)
                 close all
                 % save stats as csv files
