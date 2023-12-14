@@ -66,10 +66,15 @@ switch analysisName
             %j = length(mixedEnvs)-mod(i, length(mixedEnvs));
             [Env{i:i+1}] = deal(mixedEnvs{j});
             j = j+1;
-        end            
+        end
+
+       % create a grid with all possible parameter combinations
        [LF, SZ, NT, EN] = ndgrid(LogFreq, Size, nTest, Env);
        config.populationProperties = table(LF(:), SZ(:), NT(:), EN(:), ...
            'VariableNames', {'LogFreq', 'Size', 'nTest', 'Env'});
+
+       % add human connectome to config
+       config.C = sc;
 
        % set numPopulations to 1 because we're running array jobs
        config.numPopulations = 1;
@@ -135,6 +140,49 @@ switch analysisName
             config.populationProperties = {'C', sc, 'Size', 1000, 'nTest', 100};
             config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC', 'SprottE', 'SprottG'};
         end
+
+% Analysis03 configurations -------------------------------------------- %
+    case 'analysis03A'
+
+        if testRun
+            % general configs for running the analysis
+            config.numPopulations = 10;
+            config.numGenerations = 100;
+            % Population properties
+            LogFreq = {10};
+            Size = {3};
+            nTest = {2};
+        else
+            % general configs for running the analysis
+            config.numPopulations = 10;
+            config.numGenerations = 3000;
+            % Population properties
+            LogFreq = {10};
+            Size = {100};
+            nTest = {100};
+        end
+
+        % create array with only 'Lorenz' for now
+        Env = repmat({'Lorenz'}, [1 config.numPopulations]);
+
+        % create grid with all parameter combinations
+        [LF, SZ, NT, EN] = ndgrid(LogFreq, Size, nTest, Env);
+        config.populationProperties = table(LF(:), SZ(:), NT(:), EN(:), ...
+           'VariableNames', {'LogFreq', 'Size', 'nTest', 'Env'});
+
+        % add the gene search space with rewirings to config!
+        config.SearchSpace = struct('SR', 0.1:0.1:2.0, ...       % search space: spectral radius
+                                   'Rho', 0.01:0.01:0.15, ...   % search space: network density
+                                   'Beta', [1:0.5:10]*1e-8, ... % search space: Tikhonov reg param
+                                   'Sigma', 0.01:0.01:0.1, ...  % search space: input strength
+                                   'InBias', 0.1:0.2:2, ...     % search space: input bias
+                                   'Rewired', 0:50:1000);       % search space: number of connectome rewirings
+
+        % add human connectom to config
+        config.C = sc;
+
+        % set numPopulations to 1 because we're running array jobs
+        config.numPopulations = 1;
 
 % default output is structural connectivity ----------------------------- %
     otherwise

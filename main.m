@@ -5,8 +5,8 @@ if nargin<3
     testRun=false;
 end
 if nargin==0 || isempty(analyses)
-    analyses={};
-    %analyses = 'analysis02A2';
+    %analyses={};
+    analyses = 'analysis01A';
 end
 
 % get default paths
@@ -27,7 +27,7 @@ if iscell(analyses)
     end
 end
 
-%% analysis 01A (neuromorphic) + 03A (neuromorphic vs. random)
+%% analysis 01A (neuromorphic)
 % Relationship between emergence and prediction performance
 % (run with JobIDs 1-20)
 
@@ -37,6 +37,10 @@ if any(strcmpi(analyses, 'analysis01A'))
     
     % extract configs for this job
     config.populationProperties = table2struct(config.populationProperties(jobID, :));
+
+    % add human connectome to population properties
+    config.populationProperties.C = config.C;
+    config = rmfield(config, 'C');
     
     % add jobID to config to enable unique random number generator seeding
     config.jobID = jobID;
@@ -169,8 +173,59 @@ if any(strcmpi(analyses, 'analysis02B'))
     cd(paths.main)
 end
 
+%% analysis 02C
+% Does simulatneous selection for performance (min loss) and emergence (max
+% psi) lead to reservoirs with higher generalisability?
+
+%% analysis 03A (runs analysis01A but with different search space)
+% Role of human connectome topology in emergence and prediction
+% (run with JobIDs 1-10)
+
+if any(strcmpi(analyses, 'analysis03A'))
+    % get configurations
+    config = getConfig('analysis03A', testRun);
+    
+    % extract configs for this job
+    config.populationProperties = table2struct(config.populationProperties(jobID, :));
+
+    % add human connectome to population properties
+    config.populationProperties.C = config.C;
+    config = rmfield(config, 'C');
+
+    % add gene search space to population properties
+    config.populationProperties.SearchSpace = config.SearchSpace;
+    config = rmfield(config, 'SearchSpace');
+    
+    % add jobID to config to enable unique random number generator seeding
+    config.jobID = jobID;
+    
+    % run analysis
+    [perfPops, psiPops] = analysis01A(config);
+    
+    % save outputs
+    cd(paths.outputs)
+    if ~exist("analysis03A", "dir")
+        mkdir analysis03A
+    end
+    cd analysis03A
+    filename = ['analysis03A_', num2str(jobID), '.mat'];
+    save(filename, "psiPops", "perfPops", "config")
+    cd(paths.main)
+end
+
+
 %% analysis 03
-% Emergence, prediction and the human brain topology
+% Emergence, prediction and the human brain topology. Sample a neuromorphic
+% reservoir with random gene-configuration and evaluate it. Gradually
+% rewire its connectome and re-evaluate for each rewiring step. Repeat for
+% many randomly sampled reservoirs. Do we find a (negative) relationship
+% between destroying the topology of the human connectome and loss/psi?
+% Consider 3 different rewiring types:
+% 1) nothing-preserving (randomly delete n non-zero edges and randomly add
+% n edges into places where there was no edge before)
+% 2) degree-preserving (rewire using BCT function)
+% 3) small-network preserving? (generate surrogates with the same small
+% worldness index/ modularity as the human topology...)
 
 
 
