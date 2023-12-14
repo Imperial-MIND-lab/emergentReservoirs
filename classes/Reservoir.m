@@ -35,6 +35,7 @@ classdef Reservoir
         % Updateable properties:
         Rt                    % reservoir state at time t (Nx1)
         Results               % vector with [psi, vmi, xmi, perf, t*, 'loss]
+        Rewired = 0;          % number of times that C has been rewired
     end
     
     methods (Access = public)
@@ -44,8 +45,8 @@ classdef Reservoir
         function obj = Reservoir(varargin)
             % USER-MODIFIABLE PROPERTIES:
             % overwrite modifiable defaults with user inputs
-            props = {'N', 'H', 'Env', 'Tau', 'Ctype', 'Evolved', 'C', ...
-                     'Spinup', 'SR', 'Rho', 'Beta', 'Sigma', 'InBias'};
+            props = {'N', 'H', 'Env', 'Rewired', 'Tau', 'Ctype', 'Evolved',... 
+                     'C', 'Spinup', 'SR', 'Rho', 'Beta', 'Sigma', 'InBias'};
             for i = 1:2:length(varargin)
                 if any(strcmp(props, varargin{i}))
                     obj.(varargin{i}) = varargin{i+1};
@@ -89,8 +90,11 @@ classdef Reservoir
             % able to return to higher density values later on
             obj.OrigC = obj.C;
             
-            % adjust C accrording to SR and Rho
-            obj = obj.adjustC;
+            % adjust C according to SR, Rho and Rewirings
+            obj = obj.adjustDensity;
+            numRewirings = obj.Rewired;
+            obj.Rewired = 0;
+            obj = obj.rewire(numRewirings); % this also scales weights
             
             % PROPERTIES THAT DEPEND ON OTHER PROPERTIES:
             % set D, Win, Wout by thethering the environment
@@ -249,6 +253,30 @@ classdef Reservoir
             obj = obj.adjustC;
             obj = obj.resetWin;
             obj = obj.resetWout;
+        end
+
+        function obj = rewire(obj, n)
+            % Performs n degree-preserving rewirings of the reservoir network.
+            if obj.Rewired > 0
+                % if network has never been rewired before, rewire n times
+                [obj.C, nActual] = randmio_und_connected_hmt(obj.C, n);
+                obj.Rewired = nActual;
+            elseif obj.Rewired < n
+                % if network has been rewired before but less time than n,
+                % add as many rewirings as necessary until we reach n
+                [obj.C, nActual] = randmio_und_connected_hmt(obj.C, n-obj.Rewired);
+                obj.Rewired = obj.Rewired + nActual;
+            elseif obj.Rewired > n
+                % if network needs to "reverse rewirings", reset to
+                % original, non-rewired C and rewire n times
+                obj.C = obj.OrigC;
+                % make sure Rho remains unchanged
+                obj = obj.adjustDensity; 
+                [obj.C, nActual] = randmio_und_connected_hmt(obj.C, n);
+                obj.Rewired = nActual;  
+            end
+            % make sure SR remains unchanged
+            obj = obj.scaleWeights;
         end
 
         % --------------------------------------------------------------- %
@@ -550,13 +578,27 @@ classdef Reservoir
             obj.(property) = defaults.(property);
         end
 
-        function obj = adjustDensity(obj)
+        function [obj, numRewirings] = adjustDensity(obj)
             % Sets the density of the matrix to a desired level by removing
             % the weakest weights. FOR SYMMETRIC MATRICES.
             Emax = 0.5*(obj.N*(obj.N-1))+obj.N;      % max possible number of edges
             Ed = obj.Rho*(Emax);                     % desired number of edges
             Ec = nnz(triu(obj.C));                   % current number of edges
-            if Ed < Ec
+
+            % if current density is lower than desired density
+            numRewirings = 0;
+            if Ed>Ec
+                % reset to original network
+                obj.C = obj.OrigC;
+                % get new number of current edges
+                Ec = nnz(triu(obj.C));
+                % and set flags for rewiring to true
+                numRewirings = obj.Rewired;
+                obj.Rewired = 0;
+            end
+
+            % if desired number of edges is less than current
+            if Ed<Ec
                 % get linearized upper triangular matrix
                 triuC = obj.C(triu(true(obj.N)));
                 % find indices of all non-zero elements
@@ -566,33 +608,18 @@ classdef Reservoir
                 % smallest non-zero edges, retaining Ed edges
                 triuC(idx(idxmin)) =0;
                 obj.C = vec2sqmat(triuC, 'triu_withDiag');
+
+            % otherwise set Rho to acutal density value
             elseif Ed>Ec
                 disp("Warning: desired C density is higher than current density.")
                 obj.Rho = density_und(obj.C);
             end
-        end
-
-        function obj = damage(obj, rho)
-            % Sets the density of the matrix to a desired level by removing
-            % randomly selected weights. FOR SYMMETRIC MATRICES.
-
-            assert(rho<obj.Rho, 'Error: current density is lower than requested.')
-            Emax = 0.5*(obj.N*(obj.N-1))+obj.N;      % max possible number of edges
-            Ed = rho*(Emax);                         % desired number of edges
-            Ec = nnz(triu(obj.C));                   % current number of edges
-
-            assert(Ed<Ec, 'Error: current numer of edges is lower than requested.')
-            % get linearized upper triangular matrix
-            triuC = obj.C(triu(true(obj.N)));
-            % find indices of all non-zero elements
-            idx = find(triuC);
-            % randomly cut non-zero edges, retaining Ed edges
-            idx = idx(randperm(length(idx), round(Ec-Ed)));                
-            triuC(idx) =0;
-            obj.C = vec2sqmat(triuC, 'triu_withDiag'); 
             
-            % reset density property
-            obj.Rho = density_und(obj.C);
+            % scale and rewire, if needed
+            if numRewirings>0
+                % this includes weight scaling by default
+                obj = obj.rewire(numRewirings);
+            end
         end
 
         function obj = scaleWeights(obj)
@@ -607,10 +634,13 @@ classdef Reservoir
         function obj = adjustC(obj)
             % Adjusts C according to Rho and SR.
             % first reset C to the original, to make sure that density
-            % isn't too low to be adjusted (can only be reduced).
-            obj.C = obj.OrigC;          
-            obj = obj.adjustDensity;
-            obj = obj.scaleWeights;
+            % isn't too low to be adjusted (can only be reduced).        
+            [obj, numRewirings] = obj.adjustDensity;
+            % if adjustDensity performed rewirings, then C was already
+            % scaled.
+            if numRewirings==0
+                obj = obj.scaleWeights;
+            end
         end
 
     end
