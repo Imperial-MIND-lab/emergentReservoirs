@@ -30,9 +30,9 @@ while true
     
     if checkInputs
         % plot sample distribution
-        env.phasePortrait(u);
+        env.plot(u);
         % request confirmation
-        if input("happy?")
+        if input("accept?")
             break
         else
             close 
