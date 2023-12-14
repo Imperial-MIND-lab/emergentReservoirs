@@ -22,10 +22,10 @@ for job = 1:length(jobIDs)
     % plot results for this job
     metrics = fieldnames(results);
     for m = 1:length(metrics)
-        g = kron([0; 1], ones(size(results.(metrics{m}), 1), 1)); % grouping variable
-        boxplot_hmt(results.(metrics{m})(:), g==1, 1, {'trained', 'random'});
+        xPos = kron([1; 2], ones(size(results.(metrics{m}), 1), 1)); % grouping variable
+        boxplot_hmt(results.(metrics{m})(:), xPos, 1, {'trained', 'random'});
         ylabel(metrics{m})
-        title(strcat("optimised for ", config.optimisedFor{1}))
+        subtitle(strcat("optimised for ", config.optimisedFor{1}))
     
         % save plots
         if saveFigures
