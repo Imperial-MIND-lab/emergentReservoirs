@@ -35,7 +35,7 @@ if numBoxes==2
     stats = s.t(:);
     stats.hedgesg = s.hedgesg;
     title(strcat("p =  ", num2str(stats.p), "; hedge's g = ", num2str(stats.hedgesg)))
-    
+
     % scale y-axis limits to make space for asterisks
     maxVal = max(y);
     minVal = min(y);
@@ -44,7 +44,7 @@ if numBoxes==2
     
     % add asterisks to plot if p<0.05
     asterisk = get_asterisk(stats.p);
-    label = text(xPos(1)-xPos(2), maxVal+0.5*yOffset, asterisk, 'Fontsize', 14);
+    label = text(xPos(1)+(xPos(2)-xPos(1))/2, maxVal+0.5*yOffset, asterisk, 'Fontsize', 14);
     set(label,'HorizontalAlignment','center','VerticalAlignment','middle');
 end
 
