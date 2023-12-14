@@ -91,10 +91,10 @@ classdef Reservoir
             obj.OrigC = obj.C;
             
             % adjust C according to SR, Rho and Rewirings
-            obj = obj.adjustDensity;
             numRewirings = obj.Rewired;
             obj.Rewired = 0;
-            obj = obj.rewire(numRewirings); % this also scales weights
+            obj = obj.rewire(numRewirings);
+            obj = obj.adjustC;
             
             % PROPERTIES THAT DEPEND ON OTHER PROPERTIES:
             % set D, Win, Wout by thethering the environment
@@ -191,6 +191,10 @@ classdef Reservoir
                 obj.(propName) = propValue;
                 obj = obj.adjustC;
 
+            % Rewiring property
+            elseif strcmp(propName, 'Rewired')
+                obj = obj.rewire(propValue);
+
             % Changing Sigma requires adjustment of Win
             elseif strcmp(propName, 'Sigma')
                 obj.Sigma = propValue;
@@ -270,10 +274,10 @@ classdef Reservoir
                 % if network needs to "reverse rewirings", reset to
                 % original, non-rewired C and rewire n times
                 obj.C = obj.OrigC;
+                [obj.C, nActual] = randmio_und_connected_hmt(obj.C, n);
+                obj.Rewired = nActual;
                 % make sure Rho remains unchanged
                 obj = obj.adjustDensity; 
-                [obj.C, nActual] = randmio_und_connected_hmt(obj.C, n);
-                obj.Rewired = nActual;  
             end
             % make sure SR remains unchanged
             obj = obj.scaleWeights;
