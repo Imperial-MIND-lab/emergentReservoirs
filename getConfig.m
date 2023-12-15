@@ -141,6 +141,43 @@ switch analysisName
             config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC', 'SprottE', 'SprottG'};
         end
 
+% Analysis02C configurations -------------------------------------------- %
+    case 'analysis02C'
+
+        if testRun
+            % number of populations (repetitions) per environment
+            config.PopsPerEnv = 1;    
+            config.numGenerations = 100;
+            % Population properties
+            LogFreq = {10};
+            Size = {3};
+            nTest = {3};
+        else
+            % number of populations (repetitions) per environment
+            config.PopsPerEnv = 3;
+            config.numGenerations = 3000;
+            % Population properties
+            LogFreq = {10};
+            Size = {100};
+            nTest = {100};
+        end
+
+        % create array with environment names
+        Env = {'SprottA', 'SprottB', 'SprottC', 'SprottE', 'SprottG', ...
+               'SprottH', 'SprottJ', 'SprottK', 'SprottN', 'SprottR'};
+        Env = repmat(Env', [config.PopsPerEnv 1]);
+        
+        % create a grid with all parameter combinations
+        [LF, SZ, NT, EN] = ndgrid(LogFreq, Size, nTest, Env);
+        config.populationProperties = table(LF(:), SZ(:), NT(:), EN(:), ...
+                   'VariableNames', {'LogFreq', 'Size', 'nTest', 'Env'});
+
+        % add human connectome to config
+        config.C = sc;
+
+        % set numPopulations to 1 because we're running array jobs
+        config.numPopulations = 1;
+
 % Analysis03 configurations -------------------------------------------- %
     case 'analysis03A'
 

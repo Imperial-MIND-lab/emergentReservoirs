@@ -6,7 +6,7 @@ if nargin<3
 end
 if nargin==0 || isempty(analyses)
     %analyses={};
-    analyses = 'analysis01A';
+    analyses = 'analysis02C';
 end
 
 % get default paths
@@ -173,9 +173,38 @@ if any(strcmpi(analyses, 'analysis02B'))
     cd(paths.main)
 end
 
-%% analysis 02C
+%% analysis 02C (runs analysis01A with all Sprott environments)
 % Does simulatneous selection for performance (min loss) and emergence (max
 % psi) lead to reservoirs with higher generalisability?
+% (run with JobIDs 1-30)
+
+if any(strcmpi(analyses, 'analysis02C'))
+    % get configurations
+    config = getConfig('analysis02C', testRun);
+    
+    % extract configs for this job
+    config.populationProperties = table2struct(config.populationProperties(jobID, :));
+
+    % add human connectome to population properties
+    config.populationProperties.C = config.C;
+    config = rmfield(config, 'C');
+    
+    % add jobID to config to enable unique random number generator seeding
+    config.jobID = jobID+133;
+    
+    % run analysis
+    [perfPops, psiPops] = analysis01A(config);
+    
+    % save outputs
+    cd(paths.outputs)
+    if ~exist("analysis02C", "dir")
+        mkdir analysis02C
+    end
+    cd analysis02C
+    filename = ['analysis02C_', num2str(jobID), '.mat'];
+    save(filename, "psiPops", "perfPops", "config")
+    cd(paths.main)
+end
 
 %% analysis 03A (runs analysis01A but with different search space)
 % Role of human connectome topology in emergence and prediction
