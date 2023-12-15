@@ -1,4 +1,4 @@
-function [] = plotGenes(populations)
+function [bestGenotype] = plotGenes(populations)
 % plot gene distributions
 
 % get some parameters for convenience
@@ -45,6 +45,11 @@ for gene = 1:numGenes
     hold off
     ylabel('frequency')
     title(strcat(geneNames{gene}, "; best: ", num2str(bestGenotype(gene)), "; selection: ", pop.SelectionCriterion))
+end
+
+% clear output if not requested
+if nargout==0
+    clear bestGenotype
 end
 
 end
