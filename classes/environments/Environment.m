@@ -65,7 +65,7 @@ classdef (Abstract) Environment
 
             % sample n time series
             numts = 1;
-            numAttempts = 0; maxAttempts = max(100, 5*n);
+            numAttempts = 0; maxAttempts = max(3000, 5*n);
             while(numts <= n)
                 % sample initial condition
                 u(:, 1, numts) = obj.init;
@@ -74,7 +74,7 @@ classdef (Abstract) Environment
                 while(~rangeExceeded && t<T)
                     u(:, t+1, numts) = obj.next(u(:, t, numts)) + obj.SystemNoise*randn(1);
                     % make sure that system stays within reasonable range
-                    if sum(u(:, t+1, numts) > max(sum(obj.Ranges, 2)*2)) > 0
+                    if sum(u(:, t+1, numts) > max(sum(obj.Ranges, 2)*10)) > 0
                         disp(strcat("system exceeded range at t = ", num2str(t)))
                         rangeExceeded = true;
                         numts = numts-1; % repeat this run.
