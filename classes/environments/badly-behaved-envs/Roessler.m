@@ -4,10 +4,10 @@ classdef Roessler < Environment
     properties
         D = 3;                                      % system dimension 
         Ranges = [50, -20; 50, -25; 100, 0];         % variable ranges
-        Params = struct('a', 0.1, ...               % ODE parameters
-                        'b', 0.1, ...
-                        'c', 14); 
-        H = 0.005;                                  % Euler integration step
+        Params = struct('a', 0.2, ...               % ODE parameters
+                        'b', 0.2, ...
+                        'c', 5.7); 
+        H = 0.05;                                  % Euler integration step
         SignalNoise = 0;                            % std of observational noise
         SystemNoise = 0;                            % std of system internal noise
     end
