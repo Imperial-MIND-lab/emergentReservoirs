@@ -303,9 +303,9 @@ classdef Population
             idx = 1+int16(obj.Generation/obj.LogFreq);
             % ignore reservoirs with NaN psi and -inf loss.
             ignore = or(isnan(obj.CurrentStats), isinf(obj.CurrentStats));
-            obj.StatsLog.Avg(idx, ~ignore) = mean(obj.CurrentStats, 1);
-            obj.StatsLog.Std(idx, ~ignore) = std(obj.CurrentStats, 0, 1);
-            obj.StatsLog.Max(idx, ~ignore) = max(obj.CurrentStats, [], 1);
+            obj.StatsLog.Avg(idx, :) = mean(obj.CurrentStats(~ignore), 1);
+            obj.StatsLog.Std(idx, :) = std(obj.CurrentStats(~ignore), 0, 1);
+            obj.StatsLog.Max(idx, :) = max(obj.CurrentStats(~ignore), [], 1);
         end
 
         function [winner, loser] = tournament(obj)
