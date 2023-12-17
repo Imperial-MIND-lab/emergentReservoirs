@@ -28,7 +28,7 @@ switch username
         % place main.m in the same directory as addPaths.m
         paths.main = mfilename('fullpath');
         paths.main = paths.main(1:end-9);
-        paths.external = '$HOME/external/matlab';
+        paths.external = '/rds/general/user/hmt23/home/external/matlab';
         paths.data = fullfile(paths.main, 'data');
         paths.outputs = fullfile(paths.main, 'outputs', 'results');
         paths.figures = fullfile(paths.main, 'outputs', 'figures');
