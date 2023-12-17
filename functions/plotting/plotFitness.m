@@ -36,7 +36,7 @@ for m = 1:length(measures)
 
         % psi on the right axis
         yyaxis right
-        plot(logTimes, real(pop.StatsLog.Avg(:, pop.find('psi'))), '-r')
+        plot(logTimes, pop.StatsLog.Avg(:, pop.find('psi')), '-r')
         ylabel('psi')
     end
     title(strcat("selection: ", pop.SelectionCriterion))
@@ -56,11 +56,11 @@ for p = 1:numPops
     logTimes = [1, pop.LogFreq:pop.LogFreq:pop.Generation];
     % plot Xmi on the left axis
     yyaxis left
-    plot(logTimes, real(pop.StatsLog.Avg(:, pop.find('xmi'))), '-k')
+    plot(logTimes, pop.StatsLog.Avg(:, pop.find('xmi')), '-k')
     ylabel('Xmi')
     % Vmi on the right axis
     yyaxis right
-    plot(logTimes, real(pop.StatsLog.Avg(:, pop.find('vmi'))), '-r')
+    plot(logTimes, pop.StatsLog.Avg(:, pop.find('vmi')), '-r')
     ylabel('Vmi')
 end
 title(strcat("selection: ", pop.SelectionCriterion))
@@ -75,8 +75,8 @@ for m = 1:length(measures)
     hold on
     for p = 1:numPops
         pop = populations{p};
-        x = real(pop.StatsLog.Avg(:, pop.find('psi')));
-        y = real(pop.StatsLog.Avg(:, pop.find(measures{m})));
+        x = pop.StatsLog.Avg(:, pop.find('psi'));
+        y = pop.StatsLog.Avg(:, pop.find(measures{m}));
         scatter(x, y, ...
           'MarkerEdgeColor' , 'none', ... 
           'MarkerFaceColor' , colours(p,:), ...

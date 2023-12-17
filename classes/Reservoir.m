@@ -543,7 +543,34 @@ classdef Reservoir
             % Computes psi, vmi, xmi and loss for one forecast.
             [psi, vmi, xmi] = computeEmergence(o, R, obj.Tau);
             loss = computeLoss(o, utest);
-            results = [psi, vmi, xmi, -loss];
+            if isreal(psi)
+                results = [psi, vmi, xmi, -loss];
+            else
+                % if psi is complex, o or R must have been too highly
+                % correlated or constant and psi estimates are numerically
+                % instable. Hence, ignore and penalize.
+                results = [nan, nan, nan, -inf];
+                disp(strcat("complex psi for reservoir with loss=", num2str(loss)))
+                disp(strcat("SR: ", num2str(obj.SR)))
+                disp(strcat("Rho: ", num2str(obj.Rho)))
+                disp(strcat("Sigma: ", num2str(obj.Sigma)))
+                disp(strcat("InBias: ", num2str(obj.InBias)))
+                disp(strcat("Beta: ", num2str(obj.Beta)))
+                % plot outputs for inspection
+                figure
+                plot(o)
+                ylabel('forecast')
+                xlabel('time')
+                figure
+                plot(R)
+                ylabel('reservoir states')
+                xlabel('time')
+                % save and close figures
+                paths = addPaths;
+                savefigs(fullfile(paths.figures,'complex'), 'complex-reservoir', false)
+                close all
+                error("reservoir produced complex psi value.")
+            end
         end
 
     end
