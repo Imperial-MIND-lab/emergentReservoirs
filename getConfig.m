@@ -30,45 +30,51 @@ switch analysisName
     case 'analysis01A'
 
         if testRun
-            % general configs for running the analysis
-            config.numPopulations = 10;
+            % number of populations (repetitions) per environment
+            config.PopsPerEnv = 1;    
             config.numGenerations = 100;
             % Population properties
             LogFreq = {10};
             Size = {3};
             nTest = {3};
+            Ctype = {'human'};
         else
-            % general configs for running the analysis
-            config.numPopulations = 10;
+            % number of populations (repetitions) per environment
+            config.PopsPerEnv = 10;
             config.numGenerations = 3000;
             % Population properties
             LogFreq = {10};
             Size = {100};
             nTest = {100};
+            Ctype = {'human'};
         end
 
-        % create array with 'Lorenz' for the full first loop, and mixed
-        % environments for the other loop (supplementary analysis)
-        Env = cell(1, config.numPopulations*2);
-        [Env{1:config.numPopulations}] = deal('Lorenz');
-        mixedEnvs = {'SprottA', 'SprottB', 'SprottC', 'SprottE', 'SprottG'};
-        j = 1;
-        for i = config.numPopulations+1:2:length(Env)
-            %j = length(mixedEnvs)-mod(i, length(mixedEnvs));
-            [Env{i:i+1}] = deal(mixedEnvs{j});
-            j = j+1;
+        % create array with environment names
+        Envs = {'Lorenz', ...
+               'SprottA', 'SprottB', 'SprottC', 'SprottE', 'SprottG', ...
+               'SprottH', 'SprottJ', 'SprottK', 'SprottN', 'SprottR'};
+        %Env = repmat(Env', [config.PopsPerEnv 1]);
+        Env = cell(1, length(Envs)*config.PopsPerEnv);
+        env = 1;
+        for i = 1:config.PopsPerEnv:length(Env)
+            Env(i:i+config.PopsPerEnv-1) = Envs(env);
+            env = env+1;
         end
+        
+        % create a grid with all parameter combinations
+        [LF, SZ, NT, EN, CT] = ndgrid(LogFreq, Size, nTest, Env, Ctype);
+        config.populationProperties = table(LF(:), SZ(:), NT(:), EN(:), CT(:), ...
+                   'VariableNames', {'LogFreq', 'Size', 'nTest', 'Env', 'Ctype'});
 
-       % create a grid with all possible parameter combinations
-       [LF, SZ, NT, EN] = ndgrid(LogFreq, Size, nTest, Env);
-       config.populationProperties = table(LF(:), SZ(:), NT(:), EN(:), ...
-           'VariableNames', {'LogFreq', 'Size', 'nTest', 'Env'});
+        % repeat the whole table, but with random reservoirs
+        numRows = size(config.populationProperties,1);
+        tbl = config.populationProperties;
+        tbl.Ctype = repmat({'random'}, [numRows 1]);
+        config.populationProperties = [config.populationProperties; tbl];
 
-       % add human connectome to config
-       config.C = sc;
-
-       % set numPopulations to 1 because we're running array jobs
-       config.numPopulations = 1;
+        % add random seed to configs, such that neuromorphic and random
+        % population pairs have the same random seed
+        config.seed = [1:numRows, 1:numRows];
 
 % Analysis01C configurations -------------------------------------------- %
     case 'analysis01C'
@@ -131,86 +137,6 @@ switch analysisName
             config.populationProperties = {'C', sc, 'Size', 1000, 'nTest', 100};
             config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC', 'SprottE', 'SprottG'};
         end
-
-% Analysis02C configurations -------------------------------------------- %
-    case 'analysis02C'
-
-        if testRun
-            % number of populations (repetitions) per environment
-            config.PopsPerEnv = 1;    
-            config.numGenerations = 100;
-            % Population properties
-            LogFreq = {10};
-            Size = {3};
-            nTest = {3};
-        else
-            % number of populations (repetitions) per environment
-            config.PopsPerEnv = 3;
-            config.numGenerations = 3000;
-            % Population properties
-            LogFreq = {10};
-            Size = {100};
-            nTest = {100};
-        end
-
-        % create array with environment names
-        Env = {'SprottA', 'SprottB', 'SprottC', 'SprottE', 'SprottG', ...
-               'SprottH', 'SprottJ', 'SprottK', 'SprottN', 'SprottR'};
-        Env = repmat(Env', [config.PopsPerEnv 1]);
-        
-        % create a grid with all parameter combinations
-        [LF, SZ, NT, EN] = ndgrid(LogFreq, Size, nTest, Env);
-        config.populationProperties = table(LF(:), SZ(:), NT(:), EN(:), ...
-                   'VariableNames', {'LogFreq', 'Size', 'nTest', 'Env'});
-
-        % add human connectome to config
-        config.C = sc;
-
-        % set numPopulations to 1 because we're running array jobs
-        config.numPopulations = 1;
-
-% Analysis03 configurations -------------------------------------------- %
-    case 'analysis03A'
-
-        if testRun
-            % general configs for running the analysis
-            config.numPopulations = 10;
-            config.numGenerations = 100;
-            % Population properties
-            LogFreq = {10};
-            Size = {3};
-            nTest = {2};
-        else
-            % general configs for running the analysis
-            config.numPopulations = 10;
-            config.numGenerations = 3000;
-            % Population properties
-            LogFreq = {10};
-            Size = {100};
-            nTest = {100};
-        end
-
-        % create array with only 'Lorenz' for now
-        Env = repmat({'Lorenz'}, [1 config.numPopulations]);
-
-        % create grid with all parameter combinations
-        [LF, SZ, NT, EN] = ndgrid(LogFreq, Size, nTest, Env);
-        config.populationProperties = table(LF(:), SZ(:), NT(:), EN(:), ...
-           'VariableNames', {'LogFreq', 'Size', 'nTest', 'Env'});
-
-        % add the gene search space with rewirings to config!
-        config.SearchSpace = struct('SR', 0.1:0.1:2.0, ...      % search space: spectral radius
-                                   'Rho', 0.01:0.01:0.15, ...   % search space: network density
-                                   'Beta', [1:0.5:10]*1e-8, ... % search space: Tikhonov reg param
-                                   'Sigma', 0.01:0.01:0.1, ...  % search space: input strength
-                                   'InBias', 0.1:0.2:2, ...     % search space: input bias
-                                   'Rewired', 0:50:1000);       % search space: number of connectome rewirings
-
-        % add human connectom to config
-        config.C = sc;
-
-        % set numPopulations to 1 because we're running array jobs
-        config.numPopulations = 1;
 
 % default output is structural connectivity ----------------------------- %
     otherwise

@@ -1,45 +1,39 @@
-function [perfPops, psiPops] = analysis01A(config)
-% Runs analysis 1A: relationship between emergence and prediction 
-% performance - Evolutions of neuromorphic populations selecting for
-% minimal loss or maximal emergence.
+function [results] = analysis01A(config)
+% Runs analysis01A: Evolving populations of reservoirs by selecting for
+% minimum prediction loss, or maximum psi to examine the relationship 
+% between emergence and prediction performance.
 
 % set a unique random number generator seed!
-rng(config.jobID)
+rng(config.seed)
 
 % turn struct input into name-value pair cell
 config.populationProperties = struct2NV(config.populationProperties); 
 
-% output variables
-psiPops = cell(config.numPopulations, 1);
-perfPops = cell(config.numPopulations, 1);
+% initialize a max-Performance population
+lossPop = Population(config.populationProperties{:},'SelectionCriterion','loss');
 
-for run = 1:config.numPopulations
-    disp(strcat("START RUN: ", num2str(run)))
+% clone the population and change selection criterion to psi
+psiPop = lossPop;
+psiPop = psiPop.setSelectionCriterion('psi');
 
-    % initialize a max-Performance population
-    perfPops{run} = Population(config.populationProperties{:}, ...
-                               'SelectionCriterion', 'loss');
+% evolve the performance population
+tic
+disp("Evolving minLoss population...")
+lossPop = lossPop.evolve(config.numGenerations);
+toc
 
-    % clone the population and change selection criterion to psi
-    psiPops{run} = perfPops{run};
-    psiPops{run} = psiPops{run}.setSelectionCriterion('psi');
+% copy input sequence onto parallel emergence population
+psiPop = psiPop.copyInput(lossPop);
 
-    % evolve the performance population
-    tic
-    disp("Evolving performance population...")
-    perfPops{run} = perfPops{run}.evolve(config.numGenerations);
-    toc
+% evolve the emergence population
+tic
+disp("Evolving maxPsi population...")
+psiPop = psiPop.evolve(config.numGenerations);
+toc
 
-    % copy input sequence onto parallel emergence population
-    psiPops{run} = psiPops{run}.copyInput(perfPops{run});
-    
-    % evolve the emergence population
-    tic
-    disp("Evolving emergence population...")
-    psiPops{run} = psiPops{run}.evolve(config.numGenerations);
-    toc
-end
-
+% wrap outputs into output variable
+results.psiPop = psiPop;
+results.lossPop = lossPop;
 
 end
 

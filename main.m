@@ -1,61 +1,55 @@
-function [] = main(analyses, jobID, testRun)
+function [] = main(analysisName, jobID, testRun)
 
 % test run = false by default
 if nargin<3
     testRun=false;
 end
-if nargin==0 || isempty(analyses)
-    analyses={};
-    %analyses = 'analysis02C';
-end
 
-% get default paths
-paths = getConfig('paths');
+% add filepaths to matlab search path
+paths = addPaths();
 
-% add external dependencies, etc.
-addPaths(paths)
-
-% create output and figures directory
+% create output directory
 if ~exist(paths.outputs, "dir")
     mkdir(paths.outputs)
 end
 
-% strcmp/strcmpi only works with cell arrays if cell items are chars!
-if iscell(analyses)
-    for a = 1:length(analyses)
-        analyses{a} = convertStringsToChars(analyses{a});
-    end
-end
+%% analysis 01A: evolving populations
+% Relationship between emergence and prediction performance across various
+% predictions tasks and in neuromorphic and random reservoirs.
+% (run with JobIDs 1-220)
 
-%% analysis 01A (neuromorphic)
-% Relationship between emergence and prediction performance
-% (run with JobIDs 1-20)
-
-if any(strcmpi(analyses, 'analysis01A'))
+if strcmpi(analysisName, 'analysis01A')
     % get configurations
-    config = getConfig('analysis01A', testRun);
+    config = getConfig(analysisName, testRun);
     
     % extract configs for this job
     config.populationProperties = table2struct(config.populationProperties(jobID, :));
+    config.seed = config.seed(jobID);
 
-    % add human connectome to population properties
-    config.populationProperties.C = config.C;
-    config = rmfield(config, 'C');
-    
-    % add jobID to config to enable unique random number generator seeding
-    config.jobID = jobID;
+    % add Ctype-specific reservoir network
+    if strcmp(config.populationProperties.Ctype, 'human')
+        % add human connectome for neuromorphic reservoir populations
+        sc = getConfig();
+        config.populationProperties.C = sc.C;
+    elseif strcmp(config.populationProperties.Ctype, 'random')
+        % add [] for random reservoir populations
+        config.populationProperties.C = [];
+    end
     
     % run analysis
-    [perfPops, psiPops] = analysis01A(config);
+    results = analysis01A(config);
     
     % save outputs
     cd(paths.outputs)
-    if ~exist("analysis01A", "dir")
-        mkdir analysis01A
+    if ~exist(analysisName, "dir")
+        mkdir(analysisName)
     end
-    cd analysis01A
-    filename = ['analysis01A_', num2str(jobID), '.mat'];
-    save(filename, "psiPops", "perfPops", "config")
+    cd(analysisName)
+    filename = [analysisName, '_', ...
+                config.populationProperties.Ctype, '_', ...
+                config.populationProperties.Env, '_', ...
+                num2str(config.seed), '.mat'];
+    save(filename, "results", "config")
     cd(paths.main)
 end
 
@@ -66,7 +60,7 @@ end
 % Break recurrence by comparing psi of trained vs. random output.
 % (run with JobIDs 1-2)
 
-if any(strcmpi(analyses, 'analysis01C'))
+if strcmpi(analysisName, 'analysis01C')
     % get configurations
     config = getConfig('analysis01C', testRun);
 
@@ -95,7 +89,7 @@ end
 % Generalisability of loss- versus psi-optimised reservoirs (version 1)
 % (run as single job, i.e. jobID = 1)
 
-if any(strcmpi(analyses, 'analysis02A1'))
+if strcmpi(analysisName, 'analysis02A1')
     % get configurations
     config = getConfig('analysis02A1', testRun);
 
@@ -119,7 +113,7 @@ end
 % Generalisability of loss- versus psi-optimised reservoirs (version 2)
 % (run with jobIDs 1-10)
 
-if any(strcmpi(analyses, 'analysis02A2'))
+if strcmpi(analysisName, 'analysis02A2')
     % get configurations
     config = getConfig('analysis02A2', testRun);
 
@@ -150,7 +144,7 @@ end
 % Further checks of loss-psi relationship in the context of generalisability
 % (run with jobIDs 1-6)
 
-if any(strcmpi(analyses, 'analysis02B'))
+if strcmpi(analysisName, 'analysis02B')
     % get configurations
     config = getConfig('analysis02B', testRun);
 
@@ -172,90 +166,6 @@ if any(strcmpi(analyses, 'analysis02B'))
     save(filename, "results", "config")
     cd(paths.main)
 end
-
-%% analysis 02C (runs analysis01A with all Sprott environments)
-% Does simulatneous selection for performance (min loss) and emergence (max
-% psi) lead to reservoirs with higher generalisability?
-% (run with JobIDs 1-30)
-
-if any(strcmpi(analyses, 'analysis02C'))
-    % get configurations
-    config = getConfig('analysis02C', testRun);
-    
-    % extract configs for this job
-    config.populationProperties = table2struct(config.populationProperties(jobID, :));
-
-    % add human connectome to population properties
-    config.populationProperties.C = config.C;
-    config = rmfield(config, 'C');
-    
-    % add jobID to config to enable unique random number generator seeding
-    config.jobID = jobID+133;
-    
-    % run analysis
-    [perfPops, psiPops] = analysis01A(config);
-    
-    % save outputs
-    cd(paths.outputs)
-    if ~exist("analysis02C", "dir")
-        mkdir analysis02C
-    end
-    cd analysis02C
-    filename = ['analysis02C_', num2str(jobID), '.mat'];
-    save(filename, "psiPops", "perfPops", "config")
-    cd(paths.main)
-end
-
-%% analysis 03A (runs analysis01A but with different search space)
-% Role of human connectome topology in emergence and prediction
-% (run with JobIDs 1-10)
-
-if any(strcmpi(analyses, 'analysis03A'))
-    % get configurations
-    config = getConfig('analysis03A', testRun);
-    
-    % extract configs for this job
-    config.populationProperties = table2struct(config.populationProperties(jobID, :));
-
-    % add human connectome to population properties
-    config.populationProperties.C = config.C;
-    config = rmfield(config, 'C');
-
-    % add gene search space to population properties
-    config.populationProperties.SearchSpace = config.SearchSpace;
-    config = rmfield(config, 'SearchSpace');
-    
-    % add jobID to config to enable unique random number generator seeding
-    config.jobID = jobID;
-    
-    % run analysis
-    [perfPops, psiPops] = analysis01A(config);
-    
-    % save outputs
-    cd(paths.outputs)
-    if ~exist("analysis03A", "dir")
-        mkdir analysis03A
-    end
-    cd analysis03A
-    filename = ['analysis03A_', num2str(jobID), '.mat'];
-    save(filename, "psiPops", "perfPops", "config")
-    cd(paths.main)
-end
-
-
-%% analysis 03
-% Emergence, prediction and the human brain topology. Sample a neuromorphic
-% reservoir with random gene-configuration and evaluate it. Gradually
-% rewire its connectome and re-evaluate for each rewiring step. Repeat for
-% many randomly sampled reservoirs. Do we find a (negative) relationship
-% between destroying the topology of the human connectome and loss/psi?
-% Consider 3 different rewiring types:
-% 1) nothing-preserving (randomly delete n non-zero edges and randomly add
-% n edges into places where there was no edge before)
-% 2) degree-preserving (rewire using BCT function)
-% 3) small-network preserving? (generate surrogates with the same small
-% worldness index/ modularity as the human topology...)
-
 
 
 end
