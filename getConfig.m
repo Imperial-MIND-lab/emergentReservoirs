@@ -19,21 +19,12 @@ elseif nargin<2
 end
 
 % load human structural connectivity
-path2main = mfilename('fullpath');
-path2main = path2main(1:end-10);
-path2data = fullfile(path2main, "data");
-sc = load(fullfile(path2data, "sc.mat")).sc; 
+sc = load("sc.mat").sc; 
 
 % initialize output variable
 config = struct();
 
 switch analysisName
-    case 'paths'
-        config.main = path2main;                                         % path to main.m
-        config.data = path2data;                                         % path to data
-        config.external = fullfile(config.main, "external");             % path to external dependencies
-        config.outputs = fullfile(config.main, "outputs", "results");    % path to output directory
-        config.figures = fullfile(config.main, "outputs", "figures");    % path to output directory
 
 % Analysis01A configurations -------------------------------------------- %
     case 'analysis01A'
@@ -208,7 +199,7 @@ switch analysisName
            'VariableNames', {'LogFreq', 'Size', 'nTest', 'Env'});
 
         % add the gene search space with rewirings to config!
-        config.SearchSpace = struct('SR', 0.1:0.1:2.0, ...       % search space: spectral radius
+        config.SearchSpace = struct('SR', 0.1:0.1:2.0, ...      % search space: spectral radius
                                    'Rho', 0.01:0.01:0.15, ...   % search space: network density
                                    'Beta', [1:0.5:10]*1e-8, ... % search space: Tikhonov reg param
                                    'Sigma', 0.01:0.01:0.1, ...  % search space: input strength
