@@ -20,3 +20,6 @@ external/ReconcilingEmergences/**
 # ignore log files
 *.o*
 *.e*
+
+# plotting function that was written by Andrea Luppi
+functions/plotting/scatter_corr.m
