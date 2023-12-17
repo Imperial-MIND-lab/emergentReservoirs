@@ -5,8 +5,8 @@ if nargin<3
     testRun=false;
 end
 if nargin==0 || isempty(analyses)
-    %analyses={};
-    analyses = 'analysis02C';
+    analyses={};
+    %analyses = 'analysis02C';
 end
 
 % get default paths
@@ -101,7 +101,7 @@ if any(strcmpi(analyses, 'analysis02A1'))
 
     % run analysis
     tic
-    results = analysis02A(config);
+    results = analysis02A1(config);
     toc
     
     % save outputs
