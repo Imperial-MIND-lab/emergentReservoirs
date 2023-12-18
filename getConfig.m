@@ -76,6 +76,25 @@ switch analysisName
         % population pairs have the same random seed
         config.seed = [1:numRows, 1:numRows];
 
+% Analysis01B configurations -------------------------------------------- %
+    case 'analysis01B'
+
+        if testRun
+            config.environment = 'Lorenz';
+            config.reservoirProperties = {'C', sc, 'Env', config.environment};
+            config.nTest = 1;
+            config.testTime = 1000;
+            config.trainTimeRange = [10, 2000];
+            config.nTrain = 50;
+        else
+            config.environment = 'Lorenz';
+            config.reservoirProperties = {'C', sc, 'Env', config.environment};
+            config.nTest = 1;
+            config.testTime = 1000;
+            config.trainTimeRange = [10, 2000];
+            config.nTrain = 100;
+        end
+
 % Analysis01C configurations -------------------------------------------- %
     case 'analysis01C'
 
