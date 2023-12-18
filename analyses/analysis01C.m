@@ -42,7 +42,10 @@ for n = 1:config.nTest
     % generate random supervenient macro dynamics and measure psi
     for i = 1:config.numRandomizations
         % shuffle output weights
-        Wout = rc.Wout(randperm(rc.D), randperm(rc.N));
+        Wout = zeros(size(rc.Wout));
+        for d = 1:rc.D
+            Wout(d, :) = rc.Wout(d, randperm(rc.N));
+        end
         % compute random supervenient output
         oRand = Wout*R;
         % compute psi and vmi of random output
