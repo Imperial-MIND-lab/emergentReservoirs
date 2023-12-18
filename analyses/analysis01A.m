@@ -19,7 +19,8 @@ psiPop = psiPop.setSelectionCriterion('psi');
 % evolve the performance population
 tic
 disp("Evolving minLoss population...")
-lossPop = lossPop.evolve(config.numGenerations);
+%lossPop = lossPop.evolve(config.numGenerations);
+lossPop = lossPop.evolve(10);
 toc
 
 % copy input sequence onto parallel emergence population

@@ -22,7 +22,6 @@ classdef Population
                               'Beta', [1:0.5:10]*1e-8, ... % search space: Tikhonov reg param
                               'Sigma', 0.01:0.01:0.1, ...  % search space: input strength
                               'InBias', 0.1:0.2:2);        % search space: input bias
-                              %'Rewired', 0:50:1000);       % search space: number of connectome rewirings
         
         % Properties that are set dependend on other properties:
         Select                   % index to SelectionCriterion val in CurrentStats array

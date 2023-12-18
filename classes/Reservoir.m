@@ -557,12 +557,13 @@ classdef Reservoir
                 disp(strcat("InBias: ", num2str(obj.InBias)))
                 disp(strcat("Beta: ", num2str(obj.Beta)))
                 % plot outputs for inspection
+                T = size(o, 2);
                 figure
-                plot(o)
+                plot(1:T, o)
                 ylabel('forecast')
                 xlabel('time')
                 figure
-                plot(R)
+                plot(1:T, R)
                 ylabel('reservoir states')
                 xlabel('time')
                 % save and close figures
