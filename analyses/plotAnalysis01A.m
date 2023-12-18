@@ -1,52 +1,79 @@
-function [] = plotAnalysis01A(jobIDs, paths, saveFigures)
+function [] = plotAnalysis01A(saveFigures)
 % Produces plots to visualize the results of analysis01A.
-% Parameters
-% ----------
-% jobIDs : vector of ints with jobIDs (run with jobIDs = 1:10 or 11:20)
-% paths: struct with 'outputs' and 'figures' file paths
-
 
 % save figures by default
-if nargin<3
+if nargin==0
     saveFigures = true;
 end
 
-% prepare outputs
-numJobs = length(jobIDs);
-pops.psi = {};
-pops.loss = {};
+% get file paths
+paths = addPaths();
+analysisName = 'analysis01A';
 
-% load evolved populations
-for job = 1:numJobs
-    filename = strcat("analysis01A_", num2str(jobIDs(job)), ".mat");
-    %disp(strcat("loading ", filename))
-    pops.psi = [pops.psi(:)', load(fullfile(paths.outputs, "analysis01A", filename)).psiPops(:)'];
-    pops.loss = [pops.loss(:)', load(fullfile(paths.outputs, "analysis01A", filename)).perfPops(:)'];
+% intermediate storage variable: cell arrays of populations, grouped
+% according to Ctype, Env, SelectionCriterion
+Ctypes = {'human', 'random'};
+Envs = {'Lorenz', 'SprottA', 'SprottB', 'SprottE', 'SprottG', 'SprottK', 'SprottR'};
+Criteria = {'loss', 'psi'};
+for ct = 1:length(Ctypes)
+    for env = 1:length(Envs)
+        for crit = 1:length(Criteria)
+            populations.(Ctypes{ct}).(Envs{env}).(Criteria{crit})={};
+        end
+    end
 end
 
-% make plots
-criteria = fieldnames(pops);
-for crit = 1:length(criteria)
-    % generate gene distribution plots
-    plotGenes(pops.(criteria{crit}));
+%% get names of all files in analysis directory
+files = dir(fullfile(paths.outputs, analysisName, "*.mat"));
+for file = 1:length(files)
 
-    % plot fitness trajectories
-    plotFitness(pops.(criteria{crit}));
+    % load config and results of analysis
+    results = load(fullfile(paths.outputs, analysisName, files(file).name)).results;
+    config = load(fullfile(paths.outputs, analysisName, files(file).name)).config.populationProperties;
 
-    % fetch the environment name
-    envName = pops.(criteria{crit}){1}.Env;
-    if strcmp(envName(1:end-1), "Sprott")
-        envName = "Sprott";
-    end
+    % store populations in intermediate storage variable
+    populations.(config.Ctype).(config.Env).loss(end+1) = {results.lossPop};
+    populations.(config.Ctype).(config.Env).psi(end+1) = {results.psiPop};
+end
 
-    % save plots
-    if saveFigures
-        figname = strcat("analysis01A_", criteria{crit}, "_", envName);
-        savefigs(fullfile(paths.figures, "analysis01A"), figname, true)
+%% make plots for each group of populations
+for ct = 1:length(Ctypes)
+    for env = 1:length(Envs)
+        for crit = 1:length(Criteria)
+            if ~isempty(populations.(Ctypes{ct}).(Envs{env}).(Criteria{crit}))
+                % generate gene distribution plots and get fittest genotype
+                genotype = plotGenes(populations.(Ctypes{ct}).(Envs{env}).(Criteria{crit}));
+                Genotypes.(Ctypes{ct}).(Envs{env}).(Criteria{crit}) = genotype;
     
-        % close figures
-        close all
+                % save the gene distribution plots only for Lorenz populations
+                if ~strcmp(Envs{env}, 'Lorenz')
+                    close all
+                end
+    
+                % plot fitness trajectories
+                plotFitness(populations.(Ctypes{ct}).(Envs{env}).(Criteria{crit}));
+
+                % for non-Lorenz populations, only get loss/psi plots 
+                % (close the last figure, which is vmi/xmi trajectory)
+                if ~strcmp(Envs{env}, 'Lorenz')
+                    close
+                end
+    
+                % save plots
+                if saveFigures
+                    figname = [analysisName, '_', Ctypes{ct}, '_', Envs{env}, '_', Criteria{crit}];
+                    savefigs(fullfile(paths.figures, analysisName), figname, true)
+                    close all
+                end
+            end
+        end
     end
 end
+
+%% save optimized genotypes
+% save it into Reservoir class module directory
+cd(fullfile(paths.main, 'classes'))
+save("Genotypes.mat", "Genotypes")
+cd(paths.main)
 
 end
