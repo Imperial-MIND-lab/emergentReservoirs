@@ -13,160 +13,117 @@ if ~exist(paths.outputs, "dir")
     mkdir(paths.outputs)
 end
 
-%% analysis 01A: evolving populations
-% Relationship between emergence and prediction performance across various
-% predictions tasks and in neuromorphic and random reservoirs.
-% (run with JobIDs 1-220)
+% get configurations
+config = getConfig(analysisName, testRun);
 
-if strcmpi(analysisName, 'analysis01A')
-    % get configurations
-    config = getConfig(analysisName, testRun);
+%% run analysis
+
+switch analysisName
     
-    % extract configs for this job
-    config.populationProperties = table2struct(config.populationProperties(jobID, :));
-    config.seed = config.seed(jobID);
-
-    % add Ctype-specific reservoir network
-    if strcmp(config.populationProperties.Ctype, 'human')
-        % add human connectome for neuromorphic reservoir populations
-        sc = getConfig();
-        config.populationProperties.C = sc.C;
-    elseif strcmp(config.populationProperties.Ctype, 'random')
-        % add [] for random reservoir populations
-        config.populationProperties.C = [];
-    end
+    case 'analysis01A'
+    % analysis 01A: evolving populations
+    % Relationship between emergence and prediction performance across
+    % predictions tasks and in neuromorphic and random reservoirs.
+    % (run with JobIDs 1-220)
+        
+        % extract configs for this job
+        config.populationProperties = table2struct(config.populationProperties(jobID, :));
+        config.seed = config.seed(jobID);
     
-    % run analysis
-    results = analysis01A(config);
-    
-    % save outputs
-    cd(paths.outputs)
-    if ~exist(analysisName, "dir")
-        mkdir(analysisName)
-    end
-    cd(analysisName)
-    filename = [analysisName, '_', ...
-                config.populationProperties.Ctype, '_', ...
-                config.populationProperties.Env, '_', ...
-                num2str(config.seed), '.mat'];
-    save(filename, "results", "config")
-    cd(paths.main)
-end
+        % add Ctype-specific reservoir network
+        if strcmp(config.populationProperties.Ctype, 'human')
+            % add human connectome for neuromorphic reservoir populations
+            sc = getConfig();
+            config.populationProperties.C = sc.C;
+        elseif strcmp(config.populationProperties.Ctype, 'random')
+            % add [] for random reservoir populations
+            config.populationProperties.C = [];
+        end
+        
+        % run analysis
+        results = analysis01A(config);
+        
+        % define file name for saving outputs
+        filename = [analysisName, '_', ...
+                    config.populationProperties.Ctype, '_', ...
+                    config.populationProperties.Env, '_', ...
+                    num2str(config.seed), '.mat'];
 
-%% analysis 01B
-% Loss and psi are also linked when varying training time only.
-
-%% analysis 01C
-% Break recurrence by comparing psi of trained vs. random output.
-% (run with JobIDs 1-2)
-
-if strcmpi(analysisName, 'analysis01C')
-    % get configurations
-    config = getConfig('analysis01C', testRun);
-
-    % fetch optimization criterion based on jobID
-    % (which determines Reservoir default parameters)
-    config.optimisedFor = config.optimisedFor(1+mod(jobID, length(config.optimisedFor)));
-    
-    % run analysis
-    tic
-    results = analysis01C(config);
-    toc
-    
-    % save outputs
-    cd(paths.outputs)
-    if ~exist("analysis01C", "dir")
-        mkdir analysis01C
-    end
-    cd analysis01C
-    filename = ['analysis01C_', num2str(jobID), '.mat'];
-    %filename = ['analysis01C_', config.optimisedFor{:}, '.mat'];
-    save(filename, "results", "config")
-    cd(paths.main)
-end
-
-%% analysis 02A1
-% Generalisability of loss- versus psi-optimised reservoirs (version 1)
-% (run as single job, i.e. jobID = 1)
-
-if strcmpi(analysisName, 'analysis02A1')
-    % get configurations
-    config = getConfig('analysis02A1', testRun);
+    case 'analysis01B'
+    % analysis 01B:
+    % Loss and psi are also linked when varying training time only.
 
     % run analysis
     tic
-    results = analysis02A1(config);
+    results = analysis01B(config);
     toc
+
+    % define output file name
+    filename = [analysisName, '_', config.environment, '.mat'];
+
+    case 'analysis01C'
+    % analysis 01C:
+    % Breaking the recurrence by comparing psi of trained vs. random output.
+    % (run with JobIDs 1-2)
     
-    % save outputs
-    cd(paths.outputs)
-    if ~exist("analysis02A1", "dir")
-        mkdir analysis02A1
-    end
-    cd analysis02A1
-    filename = ['analysis02A1_', num2str(jobID), '.mat'];
-    save(filename, "results", "config")
-    cd(paths.main)
-end
+        % fetch optimization criterion based on jobID
+        % (which determines Reservoir default parameters)
+        config.optimisedFor = config.optimisedFor(1+mod(jobID, length(config.optimisedFor)));
+        
+        % run analysis
+        tic
+        results = analysis01C(config);
+        toc
+        
+        % define output file name
+        filename = [analysisName, '_', num2str(jobID), '.mat'];
+        %filename = ['analysis01C_', config.optimisedFor{:}, '.mat'];
 
-%% analysis 02A2
-% Generalisability of loss- versus psi-optimised reservoirs (version 2)
-% (run with jobIDs 1-10)
-
-if strcmpi(analysisName, 'analysis02A2')
-    % get configurations
-    config = getConfig('analysis02A2', testRun);
-
-    % load evolved populations
-    filename = strcat("analysis01A_", num2str(jobID), ".mat");
-    config.psiPop = load(fullfile(paths.outputs, "analysis01A", filename)).psiPops{1};
-    config.perfPop = load(fullfile(paths.outputs, "analysis01A", filename)).perfPops{1};
-
-    % run analysis
-    tic
-    results = analysis02A2(config);
-    toc
+    case 'analysis02A1'
+    % analysis 02A1
+    % Generalisability of loss- versus psi-optimised reservoirs (version 1)
+    % (run as single job, i.e. jobID = 1)
     
-    % save outputs
-    cd(paths.outputs)
-    if ~exist("analysis02A2", "dir")
-        mkdir analysis02A2
-    end
-    cd analysis02A2
-    config.popSize = config.psiPop.Size; % save population size
-    config = rmfield(config, {'psiPop', 'perfPop'}); % don't save populations
-    filename = ['analysis02A2_', num2str(jobID), '.mat'];
-    save(filename, "results", "config")
-    cd(paths.main)
+        % run analysis
+        tic
+        results = analysis02A1(config);
+        toc
+        
+        % define output file name
+        filename = [analysisName, '_', num2str(jobID), '.mat'];
+
+    case 'analysis02B'
+    % analysis 02B
+    % Further checks of loss-psi relationship in the context of generalisability
+    % (run with jobIDs 1-6)
+    
+        % get environments for this job
+        config.environments = config.environments(jobID);
+    
+        % run analysis
+        tic
+        results = analysis02B(config);
+        toc
+       
+        % define output file name
+        filename = [analysisName, '_', num2str(jobID), '.mat'];
+
+    otherwise
+        error(strcat("unknown analysis ", analysisName))
 end
 
-%% analysis 02B
-% Further checks of loss-psi relationship in the context of generalisability
-% (run with jobIDs 1-6)
+%% save outputs
 
-if strcmpi(analysisName, 'analysis02B')
-    % get configurations
-    config = getConfig('analysis02B', testRun);
-
-    % get environments for this job
-    config.environments = config.environments(jobID);
-
-    % run analysis
-    tic
-    results = analysis02B(config);
-    toc
-   
-    % save outputs
-    cd(paths.outputs)
-    if ~exist("analysis02B", "dir")
-        mkdir analysis02B
-    end
-    cd analysis02B
-    filename = ['analysis02B_', num2str(jobID), '.mat'];
-    save(filename, "results", "config")
-    cd(paths.main)
+% create output directory, if it doesn't exist
+cd(paths.outputs)
+if ~exist(analysisName, "dir")
+    mkdir(analysisName)
 end
 
+% cd into output directory and save files
+cd(analysisName)
+save(filename, "results", "config")
+cd(paths.main)
 
 end
 
