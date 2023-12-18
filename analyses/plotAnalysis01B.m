@@ -1,6 +1,11 @@
 function [] = plotAnalysis01B(saveFigures)
 % Produces plots to visualize the results of analysis01B.
 
+% save figures by default
+if nargin==0
+    saveFigures = true;
+end
+
 % get file paths
 paths = addPaths();
 
