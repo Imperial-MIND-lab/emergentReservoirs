@@ -12,7 +12,6 @@ function [paths] = addPaths()
 % get user name to identify the local machine
 [~, username] = system('whoami');
 username = username(1:end-1);
-disp(strcat("Hello ", username, "!"))
 
 % set username-dependent filepaths
 switch username
