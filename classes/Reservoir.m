@@ -548,8 +548,8 @@ classdef Reservoir
             else
                 % if psi is complex, o or R must have been too highly
                 % correlated or constant and psi estimates are numerically
-                % instable. Hence, ignore and penalize.
-                results = [nan, nan, nan, -inf];
+                % instable. Hence, penalize.
+                results = [-inf, -inf, -inf, -inf];
                 disp(strcat("complex psi for reservoir with loss=", num2str(loss)))
                 disp(strcat("SR: ", num2str(obj.SR)))
                 disp(strcat("Rho: ", num2str(obj.Rho)))
@@ -562,15 +562,21 @@ classdef Reservoir
                 plot(1:T, o)
                 ylabel('forecast')
                 xlabel('time')
+                title(strcat('loss=', num2str(loss), '; psi=', num2str(psi), ...
+                              '; vmi=', num2str(vmi), '; xmi=', num2str(xmi)));
                 figure
                 plot(1:T, R)
                 ylabel('reservoir states')
                 xlabel('time')
-                % save and close figures
+                title(strcat('loss=', num2str(loss), '; psi=', num2str(psi), ...
+                              '; vmi=', num2str(vmi), '; xmi=', num2str(xmi)));
+                % save as png and close figures
+                figname = ['SR', num2str(obj.SR), '_Rho', num2str(obj.Rho), ...
+                           '_Sigma', num2str(obj.Sigma), '_InBias', num2str(obj.InBias), ...
+                           '_Beta', num2str(obj.Beta)];
                 paths = addPaths;
-                savefigs(fullfile(paths.figures,'complex'), 'complex-reservoir', false)
+                savefigs(fullfile(paths.figures,'complex'), figname, false)
                 close all
-                error("reservoir produced complex psi value.")
             end
         end
 

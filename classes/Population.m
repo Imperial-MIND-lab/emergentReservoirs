@@ -300,11 +300,12 @@ classdef Population
         function obj = takeLog(obj)
             % Takes log of avg, max, std of stats.
             idx = 1+int16(obj.Generation/obj.LogFreq);
-            % ignore reservoirs with NaN psi and -inf loss.
-            ignore = or(isnan(obj.CurrentStats), isinf(obj.CurrentStats));
-            obj.StatsLog.Avg(idx, :) = mean(obj.CurrentStats(~ignore), 1);
-            obj.StatsLog.Std(idx, :) = std(obj.CurrentStats(~ignore), 0, 1);
-            obj.StatsLog.Max(idx, :) = max(obj.CurrentStats(~ignore), [], 1);
+            % ignore reservoirs with -inf psi/loss (which happens if psi
+            % was a complex value, indicating numerical instability)
+            ignore = sum(isinf(obj.CurrentStats),2)>0;
+            obj.StatsLog.Avg(idx,:) = mean(obj.CurrentStats(~ignore,:), 1);
+            obj.StatsLog.Std(idx,:) = std(obj.CurrentStats(~ignore,:), 0, 1);
+            obj.StatsLog.Max(idx,:) = max(obj.CurrentStats(~ignore,:), [], 1);
         end
 
         function [winner, loser] = tournament(obj)
