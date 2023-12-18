@@ -24,7 +24,7 @@ switch analysisName
     % analysis 01A: evolving populations
     % Relationship between emergence and prediction performance across
     % predictions tasks and in neuromorphic and random reservoirs.
-    % (run with JobIDs 1-220)
+    % (run with JobIDs 1-140)
         
         % extract configs for this job
         config.populationProperties = table2struct(config.populationProperties(jobID, :));

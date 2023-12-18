@@ -50,16 +50,15 @@ switch analysisName
         end
 
         % create array with environment names
-        Envs = {'Lorenz', ...
-               'SprottA', 'SprottB', 'SprottC', 'SprottE', 'SprottG', ...
-               'SprottH', 'SprottJ', 'SprottK', 'SprottN', 'SprottR'};
-        %Env = repmat(Env', [config.PopsPerEnv 1]);
-        Env = cell(1, length(Envs)*config.PopsPerEnv);
-        env = 1;
-        for i = 1:config.PopsPerEnv:length(Env)
-            Env(i:i+config.PopsPerEnv-1) = Envs(env);
-            env = env+1;
-        end
+        Env = {'Lorenz', 'SprottA', 'SprottB', ...
+               'SprottE', 'SprottG', 'SprottK', 'SprottR'};
+        Env = repmat(Env', [config.PopsPerEnv 1]);
+        % Env = cell(1, length(Envs)*config.PopsPerEnv);
+        % env = 1;
+        % for i = 1:config.PopsPerEnv:length(Env)
+        %     Env(i:i+config.PopsPerEnv-1) = Envs(env);
+        %     env = env+1;
+        % end
         
         % create a grid with all parameter combinations
         [LF, SZ, NT, EN, CT] = ndgrid(LogFreq, Size, nTest, Env, Ctype);
@@ -127,21 +126,6 @@ switch analysisName
             config.reservoirProperties = {'C', sc};
             config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC'};
             config.repetitions = 100;
-            config.trainTime = 2000;
-            config.testTime = 1000;
-        end
-
-% Analysis02A2 configurations ------------------------------------------- %
-    case 'analysis02A2'
-
-        if testRun
-            config.environments = {'Lorenz', 'SprottA'};
-            config.nTest = 1;
-            config.trainTime = 2000;
-            config.testTime = 1000;
-        else
-            config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC'};
-            config.nTest = 100;
             config.trainTime = 2000;
             config.testTime = 1000;
         end
