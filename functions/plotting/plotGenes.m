@@ -1,4 +1,4 @@
-function [bestGenotype] = plotGenes(populations)
+function [bestGenotype, bestPop] = plotGenes(populations)
 % plot gene distributions
 
 % get some parameters for convenience
@@ -9,11 +9,13 @@ numPops = length(populations);
 
 % identify the fittest the best solution across all populations
 bestFitness = -inf;
+bestPop = nan;
 for p = 1:numPops
     pop = populations{p};
     if pop.fitness(pop.Fittest) > bestFitness
         bestFitness = pop.fitness(pop.Fittest);
-        bestGenotype = pop.GenePool(pop.Fittest, :);
+        currenBestGenes = pop.GenePool(pop.Fittest, :);
+        bestPop = p;
     end
 end
 
@@ -37,19 +39,21 @@ for gene = 1:numGenes
     end
 
     % add vertical line indicating the parameter of the fittest solution
-    xline(bestGenotype(gene), 'r', 'LineWidth', 2)
+    xline(currenBestGenes(gene), 'r', 'LineWidth', 2)
 
     % scale the x axis according to the valid range for that gene
     xlim([geneRange(1) geneRange(end)])
 
     hold off
     ylabel('frequency')
-    title(strcat(geneNames{gene}, "; best: ", num2str(bestGenotype(gene)), "; selection: ", pop.SelectionCriterion))
+    title(strcat(geneNames{gene}, "; best: ", num2str(currenBestGenes(gene)), "; selection: ", pop.SelectionCriterion))
 end
 
-% clear output if not requested
-if nargout==0
-    clear bestGenotype
+% wrap results into handier format, if requested
+if nargout>0
+    for gene = 1:numGenes
+        bestGenotype.(geneNames{gene}) = currenBestGenes(gene);
+    end
 end
 
 end
