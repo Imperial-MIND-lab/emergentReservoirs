@@ -10,7 +10,6 @@ for file = 1:length(files)
 
     % load config and results of analysis
     results = load(fullfile(paths.outputs, "analysis01B", files(file).name)).results;
-    config = load(fullfile(paths.outputs, "analysis01B", files(file).name)).config;
 
     % plot 1: loss vs. train time (highlight psi>0)
     emergent = results.psi>0;
