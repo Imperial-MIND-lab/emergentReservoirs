@@ -79,14 +79,14 @@ switch analysisName
         filename = [analysisName, '_', num2str(jobID), '.mat'];
         %filename = ['analysis01C_', config.optimisedFor{:}, '.mat'];
 
-    case 'analysis02A1'
-    % analysis 02A1
-    % Generalisability of loss- versus psi-optimised reservoirs (version 1)
+    case 'analysis02A'
+    % analysis 02A:
+    % Generalisability of loss- versus psi-optimised reservoirs.
     % (run as single job, i.e. jobID = 1)
     
         % run analysis
         tic
-        results = analysis02A1(config);
+        results = analysis02A(config);
         toc
         
         % define output file name

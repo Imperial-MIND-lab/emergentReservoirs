@@ -113,21 +113,27 @@ switch analysisName
             config.numRandomizations = 10;
         end
 
-% Analysis02A1 configurations ------------------------------------------- %
-    case 'analysis02A1'
+% Analysis02A configurations ------------------------------------------- %
+    case 'analysis02A'
 
         if testRun
-            config.reservoirProperties = {'C', sc};
-            config.environments = {'Lorenz', 'SprottA'};
-            config.repetitions = 10;
+            config.C = sc;
+            config.environments = {'SprottA', 'SprottB', 'SprottE'};
+            config.repetitions = 25;
             config.trainTime = 2000;
             config.testTime = 1000;
+            config.Spinup = 500;
+            config.outcomeMeasures = {'loss', 'psi'};
         else
-            config.reservoirProperties = {'C', sc};
-            config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC'};
+            config.C = sc;
+            config.environments = {'SprottA', 'SprottB', ...
+                                   'SprottE', 'SprottG', ...
+                                   'SprottK', 'SprottR'};
             config.repetitions = 100;
             config.trainTime = 2000;
             config.testTime = 1000;
+            config.Spinup = 500;
+            config.outcomeMeasures = {'loss', 'psi', 'vmi', 'xmi'};
         end
 
 % Analysis02B configurations -------------------------------------------- %
