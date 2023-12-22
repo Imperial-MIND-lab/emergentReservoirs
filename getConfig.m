@@ -134,11 +134,19 @@ switch analysisName
     case 'analysis02B'
 
         if testRun
-            config.populationProperties = {'C', sc, 'Size', 100, 'nTest', 1};
-            config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC', 'SprottE', 'SprottG'};
+            T = struct('spinup', 500, ...            
+                       'train', 2000, ...
+                       'test', 500);
+            config.populationProperties = {'C', sc, 'Size', 100, 'nTest', 1, 'T', T};
+            config.environments = {'SprottA', 'SprottB', 'SprottE'};
         else
-            config.populationProperties = {'C', sc, 'Size', 1000, 'nTest', 100};
-            config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottC', 'SprottE', 'SprottG'};
+            T = struct('spinup', 500, ...            
+                       'train', 2000, ...
+                       'test', 500);
+            config.populationProperties = {'C', sc, 'Size', 1000, 'nTest', 100, 'T', T};
+            config.environments = {'SprottA', 'SprottB', ...
+                                   'SprottE', 'SprottG', ...
+                                   'SprottK', 'SprottR'};
         end
 
 % default output is structural connectivity ----------------------------- %

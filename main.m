@@ -97,8 +97,8 @@ switch analysisName
     % Further checks of loss-psi relationship in the context of generalisability
     % (run with jobIDs 1-6)
     
-        % get environments for this job
-        config.environments = config.environments(jobID);
+        % set seed according to jobID
+        config.seed = jobID;
     
         % run analysis
         tic
