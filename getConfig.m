@@ -53,13 +53,7 @@ switch analysisName
         Env = {'Lorenz', 'SprottA', 'SprottB', ...
                'SprottE', 'SprottG', 'SprottK', 'SprottR'};
         Env = repmat(Env', [config.PopsPerEnv 1]);
-        % Env = cell(1, length(Envs)*config.PopsPerEnv);
-        % env = 1;
-        % for i = 1:config.PopsPerEnv:length(Env)
-        %     Env(i:i+config.PopsPerEnv-1) = Envs(env);
-        %     env = env+1;
-        % end
-        
+
         % create a grid with all parameter combinations
         [LF, SZ, NT, EN, CT] = ndgrid(LogFreq, Size, nTest, Env, Ctype);
         config.populationProperties = table(LF(:), SZ(:), NT(:), EN(:), CT(:), ...
@@ -82,14 +76,14 @@ switch analysisName
             config.environment = 'Lorenz';
             config.reservoirProperties = {'C', sc, 'Env', config.environment};
             config.nTest = 1;
-            config.testTime = 1000;
+            config.testTime = 500;
             config.trainTimeRange = [10, 2000];
             config.nTrain = 50;
         else
             config.environment = 'Lorenz';
             config.reservoirProperties = {'C', sc, 'Env', config.environment};
             config.nTest = 1;
-            config.testTime = 1000;
+            config.testTime = 500;
             config.trainTimeRange = [10, 2000];
             config.nTrain = 100;
         end
@@ -102,14 +96,14 @@ switch analysisName
             config.optimisedFor = {'loss', 'psi'};
             config.nTest = 2;
             config.trainTime = 2000;
-            config.testTime = 1000;
+            config.testTime = 500;
             config.numRandomizations = 1;
         else
             config.reservoirProperties = {'C', sc, 'Env', 'Lorenz'};
             config.optimisedFor = {'loss', 'psi'};
             config.nTest = 100;
             config.trainTime = 2000;
-            config.testTime = 1000;
+            config.testTime = 500;
             config.numRandomizations = 10;
         end
 
@@ -131,7 +125,7 @@ switch analysisName
                                    'SprottK', 'SprottR'};
             config.repetitions = 100;
             config.trainTime = 2000;
-            config.testTime = 1000;
+            config.testTime = 500;
             config.Spinup = 500;
             config.outcomeMeasures = {'loss', 'psi', 'vmi', 'xmi'};
         end
