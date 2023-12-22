@@ -26,9 +26,9 @@ for o = 1:length(config.outcomeMeasures)
     om = config.outcomeMeasures{o};
 
     % create output variable for statistics
-    stats = table('Size', [numEnvs*2, 2+5], ...
-                  'VariableTypes', [repmat({'string'}, [1 2]), repmat({'double'}, [1 5])], ...
-                  'VariableNames', {'EvaluatedOn', 'ComparisonType', 'pVal', 'fdr', 'df', 'tstat', 'hedgesgORcoeff'});
+    stats = table('Size', [2*numEnvs, 2+4], ...
+                  'VariableTypes', [repmat({'string'}, [1 2]), repmat({'double'}, [1 4])], ...
+                  'VariableNames', {'EvaluatedOn', 'ComparisonType', 'pVal', 'df', 'tstat', 'hedgesgORcoeff'});
     row = 1;
     % one figure panel per each evaluation system
     for env01 = 1:numEnvs
@@ -73,6 +73,28 @@ for o = 1:length(config.outcomeMeasures)
         % save plot and close
         if saveFigures
             figname = [analysisName,'_', om, '_', evalEnv, '_within'];
+            savefigs(fullfile(paths.figures, analysisName), figname, true)
+            close all
+        end
+
+        % produce the same plot again but without outliers
+        outliers = isoutlier(y, 'quartiles');
+        figure
+        hold on
+        boxchart(double(x(~outliers)), y(~outliers), ...
+                 'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
+                 'LineWidth', 1, 'MarkerStyle', 'none');
+        ylabel([evalEnv, ' ', om])
+        swarmchart(double(x(~outliers)), y(~outliers), ...
+                   [], 'MarkerFaceColor', colours(env01, :), ...
+                   'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none') %, 'XJitter', 'density')
+        hold off
+        set(gca, 'XTick', [0 1], "XTickLabel", {'minLoss', 'maxPsi'})
+        title(strcat("p =  ", num2str(s.t.p), "; hedge's g = ", num2str(s.hedgesg)))
+
+        % save plot and close
+        if saveFigures
+            figname = [analysisName,'_', om, '_', evalEnv, '_within_woOutlier'];
             savefigs(fullfile(paths.figures, analysisName), figname, true)
             close all
         end
@@ -133,14 +155,66 @@ for o = 1:length(config.outcomeMeasures)
             savefigs(fullfile(paths.figures, analysisName), figname, true)
             close all
         end
-    end
-% save statistics as csv file
-if saveFigures
-    cd(fullfile(paths.figures, analysisName))
-    writetable(stats, strcat(analysisName,"_statistics.csv"))
-    cd(paths.main)
-end
 
+        % repeat plot but without outliers
+        % get row index for evolEnv~=evalEnv
+        evolIdx = ~strcmp(results.EvolvedTo, evalEnv);
+        conditions = and(evalIdx, evolIdx);
+        
+        % get linear indices of 'global' outliers
+        outlierIndices = 1:length(conditions);
+        outlierIndices = outlierIndices(conditions);
+        y = results.(om)(conditions);
+        x = psiOptIdx(conditions);
+        outliers = isoutlier(y, 'quartiles');
+        outlierIndices = outlierIndices(outliers);
+        
+        % make box plot without outliers
+        figure;
+        hold on
+        boxchart(double(x(~outliers)), y(~outliers), ...
+                 'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
+                 'LineWidth', 1, 'MarkerStyle', 'none');
+        ylabel([evalEnv, ' ', om])
+        set(gca, 'XTick', [0 1], "XTickLabel", {'minLoss', 'maxPsi'})
+        
+        % plot data points for each environment pair without outliers
+        for env02 = 1:numEnvs
+            evolEnv = config.environments{env02};
+            if env02~=env01
+                evolIdx = strcmp(results.EvolvedTo, evolEnv);
+                conditions = and(evalIdx, evolIdx);
+                % get logical indices for global outliers
+                outliers = ~true(length(conditions),1);
+                outliers(outlierIndices) = true;
+                conditions = and(conditions, ~outliers);
+                % extract x and y data
+                y = results.(om)(conditions);
+                x = psiOptIdx(conditions);
+                swarmchart(double(x), y, ...
+                           [], 'MarkerFaceColor', colours(env02, :), ...
+                           'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none') %, 'XJitter', 'density')
+            end
+        end
+        hold off
+        title(strcat("p=", num2str(lme.Coefficients.pValue(2)), ...
+                     "; coeff of ", lme.Coefficients.Name(2), ...
+                     "=", num2str(lme.Coefficients.Estimate(2))))
+
+        % save plot and close
+        if saveFigures
+            figname = [analysisName,'_', om, '_', evalEnv, '_between_woOutlier'];
+            savefigs(fullfile(paths.figures, analysisName), figname, true)
+            close all
+        end
+    end
+    
+    % save statistics as csv file
+    if saveFigures
+        cd(fullfile(paths.figures, analysisName))
+        writetable(stats, strcat(analysisName,"_", om, "_statistics.csv"))
+        cd(paths.main)
+    end
 end
 
 end
