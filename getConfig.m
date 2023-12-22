@@ -119,9 +119,9 @@ switch analysisName
         if testRun
             config.C = sc;
             config.environments = {'SprottA', 'SprottB', 'SprottE'};
-            config.repetitions = 25;
+            config.repetitions = 10;
             config.trainTime = 2000;
-            config.testTime = 1000;
+            config.testTime = 300;
             config.Spinup = 500;
             config.outcomeMeasures = {'loss', 'psi'};
         else
