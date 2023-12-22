@@ -27,12 +27,11 @@ function [results] = analysis02A(config)
 
 % get some parameters
 numEnvs = length(config.environments);
-numPairs = numEnvs+(numEnvs*(numEnvs-1))/2;
 numOM = length(config.outcomeMeasures);
 criteria = {'loss', 'psi'};
 
 % create output variable
-results = table('Size', [config.repetitions*numPairs*2, 3+numOM], ...
+results = table('Size', [config.repetitions*numEnvs*numEnvs*2, 3+numOM], ...
                 'VariableTypes', [repmat({'string'}, [1 3]), repmat({'double'}, [1 numOM])], ...
                 'VariableNames', ['EvaluatedOn', 'EvolvedTo', 'OptimisedFor', config.outcomeMeasures(:)']);
 
@@ -47,13 +46,13 @@ end
 
 %% run analysis
 row = 1;
-for i = 1:numEnvs
+for env01 = 1:numEnvs
     % get name of evaluation system
-    evalEnv = config.environments{i};
+    evalEnv = config.environments{env01};
 
-    for j = i:numEnvs
+    for env02 = 1:numEnvs
         % get name of system that the reservoir was evolved to predict
-        evolEnv = config.environments{j};
+        evolEnv = config.environments{env02};
 
         for rep = 1:config.repetitions
             % generate train and test inputs
