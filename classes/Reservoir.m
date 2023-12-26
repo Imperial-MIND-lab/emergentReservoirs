@@ -2,7 +2,7 @@ classdef Reservoir
 % Recurrent neural network reservoir class
 
     properties (Constant)
-        ResultNames = {'psi', 'vmi', 'xmi', 'loss'};
+        ResultNames = {'psi', 'vmi', 'xmi', 'loss', 'tstar'};
     end
 
     properties (Hidden)
@@ -137,7 +137,6 @@ classdef Reservoir
                 end
                 % average across evalutions and compute standard devs.
                 obj.Results = mean(results, 1);
-                %stds = std(results, 0 , 1);
             end
         end
 
@@ -312,7 +311,7 @@ classdef Reservoir
             otrain = obj.computeOutput(Rtrain);
 
             % plot 1: ouput and ground truth during spinup, drive and forecast
-            %tstar = obj.getResult('tstar');
+            tstar = results(obj.find('tstar'));
             figure()
             tcl = tiledlayout(obj.D, 1);
             for d = 1:obj.D
@@ -328,8 +327,8 @@ classdef Reservoir
                 % vertical lines to indicate spinup, training, forecast
                 xline(obj.Spinup, '-k', 'LineWidth', 1)
                 xline(obj.Spinup+Ttrain, '-k', 'LineWidth', 1)
-                % % vertical line to indicate t*
-                % xline(obj.Spinup+Ttrain+tstar, '--r', 'LineWidth', 1)
+                % vertical line to indicate t*
+                xline(obj.Spinup+Ttrain+tstar, '--r', 'LineWidth', 1)
                 hold off
                 xlabel('t')
                 ylabel(strcat("x",num2str(d)))
@@ -337,7 +336,7 @@ classdef Reservoir
             end
             title(tcl, strcat("loss=", num2str(results(obj.find('loss'))), ...
                          "; psi=", num2str(results(obj.find('psi'))), ...
-                         "; vmi=", num2str(results(obj.find('vmi')))))
+                         "; t*=", num2str(results(obj.find('tstar')))))
 
             % % plot 2: neuronal activities during spinup, drive and forecast
             % figure;
@@ -377,7 +376,7 @@ classdef Reservoir
             ospin = obj.computeOutput(R(:, 1:obj.Spinup));
 
             % plot 1: ouput and ground truth during spinup and forecast
-            % tstar = obj.getResult('tstar');
+            tstar = results(obj.find('tstar'));
             figure()
             tcl = tiledlayout(obj.D, 1);
             for d = 1:obj.D
@@ -393,7 +392,8 @@ classdef Reservoir
                 % vertical lines to indicate spinup and forecast
                 xline(obj.Spinup, '-k', 'LineWidth', 1)
                 % vertical line to indicate t*
-                % xline(obj.Spinup+tstar, '--r', 'LineWidth', 1)
+                disp(obj.Spinup+tstar)
+                xline(obj.Spinup+tstar, '--r', 'LineWidth', 1)
                 hold off
                 xlabel('t')
                 ylabel(strcat("x",num2str(d)))
@@ -401,7 +401,7 @@ classdef Reservoir
             end
             title(tcl, strcat("loss=", num2str(results(obj.find('loss'))), ...
                          "; psi=", num2str(results(obj.find('psi'))), ...
-                         "; vmi=", num2str(results(obj.find('vmi')))))
+                         "; t*=", num2str(results(obj.find('tstar')))))
 
             % % plot 2: neuronal activities during spinup and forecast
             % figure;
@@ -542,41 +542,14 @@ classdef Reservoir
         function results = evaluateOutput(obj, o, R, utest)
             % Computes psi, vmi, xmi and loss for one forecast.
             [psi, vmi, xmi] = computeEmergence(o, R, obj.Tau);
-            loss = computeLoss(o, utest);
+            [loss, tstar] = computePerformance(o, utest);
             if isreal(psi)
-                results = [psi, vmi, xmi, -loss];
+                results = [psi, vmi, xmi, -loss, tstar];
             else
                 % if psi is complex, o or R must have been too highly
                 % correlated or constant and psi estimates are numerically
                 % instable. Hence, penalize.
-                results = [-inf, -inf, -inf, -inf];
-                disp(strcat("complex psi for reservoir with loss=", num2str(loss)))
-                disp(strcat("SR: ", num2str(obj.SR)))
-                disp(strcat("Rho: ", num2str(obj.Rho)))
-                disp(strcat("Sigma: ", num2str(obj.Sigma)))
-                disp(strcat("InBias: ", num2str(obj.InBias)))
-                disp(strcat("Beta: ", num2str(obj.Beta)))
-                % plot outputs for inspection
-                T = size(o, 2);
-                figure
-                plot(1:T, o)
-                ylabel('forecast')
-                xlabel('time')
-                title(strcat('loss=', num2str(loss), '; psi=', num2str(psi), ...
-                              '; vmi=', num2str(vmi), '; xmi=', num2str(xmi)));
-                figure
-                plot(1:T, R)
-                ylabel('reservoir states')
-                xlabel('time')
-                title(strcat('loss=', num2str(loss), '; psi=', num2str(psi), ...
-                              '; vmi=', num2str(vmi), '; xmi=', num2str(xmi)));
-                % save as png and close figures
-                figname = ['SR', num2str(obj.SR), '_Rho', num2str(obj.Rho), ...
-                           '_Sigma', num2str(obj.Sigma), '_InBias', num2str(obj.InBias), ...
-                           '_Beta', num2str(obj.Beta)];
-                paths = addPaths;
-                savefigs(fullfile(paths.figures,'complex'), figname, false)
-                close all
+                results = [-inf, -inf, -inf, -inf, -inf];
             end
         end
 

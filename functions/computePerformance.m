@@ -1,22 +1,27 @@
 function [loss, tstar] = computePerformance(o, utest)
 % Computes loss and t*.
+% Parameter
+% ---------
+% o (DxT, double) : reservoir output (forecast) of T time steps
+% utest (DxT, double) : ground truth/ prediction target
+%
+% Returns
+% -------
+% loss (1x1, double) : prediction loss
+% tstar (1x1, double) : prediction performance
 
 % get number of input variables D and input length T
 [D, T] = size(utest);
 
-% compute absolute deviation at each time step scaled by std
-loss = abs((o-utest))./std(utest, 0, 2);
+% get standard deviations of each target variable
+stdevs = std(utest, 0, 2);
 
-% t* is the time point where avg standardized loss first exceeds 1
-tstar = zeros(D, 1);
-for d = 1:D
-    temp = find(loss(d,:)>1, 1);
-    if ~isempty(temp)
-        tstar(d) = find(loss(d,:)>1, 1);
-    else
-        tstar(d) = T;        
-    end
-end
+% compute absolute deviation at each time step scaled by std
+loss = abs((o-utest))./stdevs;
+
+% t* is the time point where avg standardized loss first exceeds 1std
+epsilon = 0.1;
+tstar = arrayfun(@(d) min([T, find(loss(d,:)>epsilon*stdevs(d),1)]), 1:D);
 
 % scale by time exponentially to account for inevitable error increase    
 loss = loss.*exp(-(1:T)/T);
