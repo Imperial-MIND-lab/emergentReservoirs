@@ -10,11 +10,11 @@ rng(config.seed)
 config.populationProperties = struct2NV(config.populationProperties); 
 
 % initialize a max-Performance population
-lossPop = Population(config.populationProperties{:},'SelectionCriterion','loss');
+lossPop = Population(config.populationProperties{:}, 'FitFun', MinLoss);
 
 % clone the population and change selection criterion to psi
 psiPop = lossPop;
-psiPop = psiPop.setSelectionCriterion('psi');
+psiPop = psiPop.setFitFun(MaxPsi);
 
 % evolve the performance population
 tic
