@@ -148,6 +148,11 @@ classdef Reservoir
             result = obj.Results(obj.find(varargin{:}));
         end
 
+        function [] = displayResults(obj)
+            % Displays results with names in a table.
+            disp(array2table(obj.Results), 'VariableNames', obj.ResultNames);
+        end
+
         function indices = find(obj, varargin)
             % Returns indices of evaluation result(s) by name.
             indices = arrayfun(@(i) find(strcmp(obj.ResultNames, varargin{i})), 1:length(varargin));
