@@ -107,6 +107,26 @@ switch analysisName
             config.numRandomizations = 10;
         end
 
+% Analysis01D configurations -------------------------------------------- %
+    case 'analysis01D'
+
+        if testRun
+            T = struct('spinup', 500, ...            
+                       'train', 2000, ...
+                       'test', 500);
+            config.populationProperties = {'C', sc, 'Size', 100, 'nTest', 100, 'T', T};
+            config.environments = {'Lorenz', 'SprottA', 'SprottR'};
+        else
+            T = struct('spinup', 500, ...            
+                       'train', 2000, ...
+                       'test', 500);
+            config.populationProperties = {'C', sc, 'Size', 1000, 'nTest', 100, 'T', T};
+            config.environments = {'Lorenz', ...
+                                   'SprottA', 'SprottB', ...
+                                   'SprottE', 'SprottG', ...
+                                   'SprottK', 'SprottR'};
+        end
+
 % Analysis02A configurations ------------------------------------------- %
     case 'analysis02A'
 

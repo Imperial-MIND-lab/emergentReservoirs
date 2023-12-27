@@ -79,6 +79,22 @@ switch analysisName
         filename = [analysisName, '_', num2str(jobID), '.mat'];
         %filename = ['analysis01C_', config.optimisedFor{:}, '.mat'];
 
+    case 'analysis01D'
+    % analysis 01D
+    % Test the hypothesis: P(success|emergence)>P(success)
+    % (run with jobIDs 1-10)
+    
+        % set seed according to jobID
+        config.seed = jobID;
+    
+        % run analysis
+        tic
+        results = analysis01D(config);
+        toc
+       
+        % define output file name
+        filename = [analysisName, '_', num2str(jobID), '.mat'];
+
     case 'analysis02A'
     % analysis 02A:
     % Generalisability of loss- versus psi-optimised reservoirs.
