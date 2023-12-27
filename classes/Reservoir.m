@@ -135,7 +135,7 @@ classdef Reservoir
                 for n = 1:numTests
                     results(n, :) = obj.test(utest(:, :, n));
                 end
-                % average across evalutions and compute standard devs.
+                % average across evalutions
                 obj.Results = mean(results, 1);
             end
         end
@@ -143,14 +143,14 @@ classdef Reservoir
         % --------------------------------------------------------------- %
         % ACCESSOR FUNCTIONS
 
-        function result = getResult(obj, resultName)
+        function result = getResult(obj, varargin)
             % Enables access to evaluation results by str name.
-            result = obj.Results(obj.find(resultName));
+            result = obj.Results(obj.find(varargin{:}));
         end
 
-        function idx = find(obj, resultName)
-            % Returns index of specific evaluation result.
-            idx = find(strcmpi(obj.ResultNames, resultName));
+        function indices = find(obj, varargin)
+            % Returns indices of evaluation result(s) by name.
+            indices = arrayfun(@(i) find(strcmp(obj.ResultNames, varargin{i})), 1:length(varargin));
         end
 
         function obj = makeLossPositive(obj)
@@ -543,8 +543,10 @@ classdef Reservoir
             % Computes psi, vmi, xmi and loss for one forecast.
             [psi, vmi, xmi] = computeEmergence(o, R, obj.Tau);
             [loss, tstar] = computePerformance(o, utest);
+            results = zeros(1, length(obj.ResultNames));
             if isreal(psi)
-                results = [psi, vmi, xmi, -loss, tstar];
+                results(obj.find('psi','vmi','xmi','loss','tstar')) = ...
+                                 [psi, vmi, xmi, -loss, tstar];
             else
                 % if psi is complex, o or R must have been too highly
                 % correlated or constant and psi estimates are numerically

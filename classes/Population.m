@@ -1,10 +1,6 @@
 classdef Population
     % evolvable population of reservoir objects.
 
-    properties (Constant)
-        StatsNames = {'psi', 'vmi', 'xmi', 'loss'};
-    end
-    
     properties
         % User-modifiable properties:
         Size = 100;                                        % number of reservoirs
@@ -24,6 +20,7 @@ classdef Population
                               'InBias', 0.1:0.2:2);        % search space: input bias
         
         % Properties that are set dependend on other properties:
+        StatsNames               % identical to ResultNames of reservoirs
         Select                   % index to SelectionCriterion val in CurrentStats array
         GeneNames                % name of genes
         NumGenes                 % number of genes
@@ -64,6 +61,9 @@ classdef Population
                    "Error: Unkown SelectionCriterion.")
             
             % DEPENDENT PROPERTIES:
+            % get StatsNames == Reservoir.ResultNames
+            obj.StatsNames = Reservoir.ResultNames;
+            
             % get the index for accessing SelectionCriterion value from
             % CurrentStats array
             obj.Select = find(strcmp(obj.StatsNames, obj.SelectionCriterion));
