@@ -300,7 +300,7 @@ classdef Reservoir
             % generate inputs if not given
             if nargin<2
                 Ttrain = 2000;
-                T = 1000+obj.Spinup+Ttrain;
+                T = 500+obj.Spinup+Ttrain;
                 u = generateInput(T, 1, obj.Env);
             else
                 T = size(u, 2);
@@ -368,7 +368,7 @@ classdef Reservoir
             % generate inputs if not given
             if nargin<2
                 Ttrain = 2000;
-                Ttest = 1000;
+                Ttest = 500;
                 utrain = generateInput(obj.Spinup+Ttrain, 1, obj.Env);
                 utest = generateInput(obj.Spinup+Ttest, 1, obj.Env);
             end
@@ -400,7 +400,6 @@ classdef Reservoir
                 % vertical lines to indicate spinup and forecast
                 xline(obj.Spinup, '-k', 'LineWidth', 1)
                 % vertical line to indicate t*
-                disp(obj.Spinup+tstar)
                 xline(obj.Spinup+tstar, '--r', 'LineWidth', 1)
                 hold off
                 xlabel('t')
