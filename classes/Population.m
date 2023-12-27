@@ -55,14 +55,14 @@ classdef Population
                     reservoirPropIdx([i, i+1]) = true;
                 end
             end
-            
-            % check validity of selection criterion input
-            assert(any(strcmp(obj.SelectionCriterion, obj.StatsNames)), ...
-                   "Error: Unkown SelectionCriterion.")
-            
+                        
             % DEPENDENT PROPERTIES:
             % get StatsNames == Reservoir.ResultNames
             obj.StatsNames = Reservoir.ResultNames;
+
+            % check validity of selection criterion input
+            assert(any(strcmp(obj.SelectionCriterion, obj.StatsNames)), ...
+                   "Error: Unkown SelectionCriterion.")
             
             % get the index for accessing SelectionCriterion value from
             % CurrentStats array
