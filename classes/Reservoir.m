@@ -161,11 +161,6 @@ classdef Reservoir
             indices = arrayfun(@(i) find(strcmp(obj.ResultNames, varargin{i})), 1:length(varargin));
         end
 
-        function obj = makeLossPositive(obj)
-            % Makes loss evaluation result positive.
-            obj.Results(obj.find('loss')) = abs(obj.Results(obj.find('loss')));
-        end
-
         function obj = setEnv(obj, envName)
             % Changes environment (input system).
             obj.Env = envName;
@@ -558,7 +553,7 @@ classdef Reservoir
                 pse = and(ps, pe);
                 % fill in results output variable
                 results(obj.find('psi','vmi','xmi','loss','tstar','ps', 'pe', 'pse')) = ...
-                                 [psi, vmi, xmi, -loss, tstar, ps, pe, pse];
+                                 [psi, vmi, xmi, loss, tstar, ps, pe, pse];
             else
                 % if psi is complex, o or R must have been too highly
                 % correlated or constant and psi estimates are numerically

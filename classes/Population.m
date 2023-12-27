@@ -9,19 +9,18 @@ classdef Population
                    'train', 2000, ...
                    'test', 1000);
         nTest = 100;                                       % number of test inputs
-        SelectionCriterion = 'loss';                       % optimization criterion
         LogFreq = 10;                                      % update StatsLog every X generations
         Pm = 0.2;                                          % mutation rate
         Pc = 0.2;                                          % crossover rate
         SearchSpace =  struct('SR', 0.1:0.1:2.0, ...       % search space: spectral radius
                               'Rho', 0.01:0.01:0.15, ...   % search space: network density
-                              'Beta', [1:0.5:10]*1e-8, ... % search space: Tikhonov reg param
+                              'Beta', (1:0.5:10)*1e-8, ... % search space: Tikhonov reg param
                               'Sigma', 0.01:0.01:0.1, ...  % search space: input strength
                               'InBias', 0.1:0.2:2);        % search space: input bias
+        FitFun = MinLoss;                                  % fitness function
         
         % Properties that are set dependend on other properties:
         StatsNames               % identical to ResultNames of reservoirs
-        Select                   % index to SelectionCriterion val in CurrentStats array
         GeneNames                % name of genes
         NumGenes                 % number of genes
         Origin                   % gene pool upon initialization
@@ -43,7 +42,7 @@ classdef Population
         function obj = Population(varargin)
             % USER-MODIFIABLE PROPERTIES:
             % overwrite modifiable defaults with user inputs
-            props = {'Size', 'Env', 'T', 'nTest', 'SelectionCriterion', ...
+            props = {'Size', 'Env', 'T', 'nTest', 'FitFun', ...
                      'LogFreq', 'Pm', 'Pc', 'SearchSpace'};
             reservoirPropIdx = ~true(1, length(varargin));
             for i = 1:2:length(varargin)
@@ -57,16 +56,8 @@ classdef Population
             end
                         
             % DEPENDENT PROPERTIES:
-            % get StatsNames == Reservoir.ResultNames
-            obj.StatsNames = Reservoir.ResultNames;
-
-            % check validity of selection criterion input
-            assert(any(strcmp(obj.SelectionCriterion, obj.StatsNames)), ...
-                   "Error: Unkown SelectionCriterion.")
-            
-            % get the index for accessing SelectionCriterion value from
-            % CurrentStats array
-            obj.Select = find(strcmp(obj.StatsNames, obj.SelectionCriterion));
+            % get StatsNames == Reservoir.ResultNames + fitness
+            obj.StatsNames = [Reservoir.ResultNames(:)', 'fitness'];
 
             % infer gene names and number from search space
             obj.GeneNames = fieldnames(obj.SearchSpace);
@@ -96,11 +87,6 @@ classdef Population
             obj.StatsLog.Max = [];
             obj.StatsLog.Std = [];
             obj.Fittest = nan;
-        end
-
-        function score = fitness(obj, idx)
-            % Returns fitness score of idx-th reservoir in the population.
-            score = obj.CurrentStats(idx, obj.Select);
         end
 
         function obj = copyInput(obj, population)
@@ -134,31 +120,23 @@ classdef Population
 
         function stats = getStats(obj, statName)
             % Access current evaluation results of all reservoirs by str name.
-            if strcmpi(statName, 'loss')
-                % return loss as positive value
-                stats = abs(obj.CurrentStats(:, obj.find(statName)));
-            else
-                stats = obj.CurrentStats(:, obj.find(statName));
-            end
+            stats = obj.CurrentStats(:, obj.find(statName));
         end
 
-        function obj = setSelectionCriterion(obj, criterion)
-            % Sets a different selection criterion.
-            obj.SelectionCriterion = criterion;
-            obj.Select = find(strcmp(obj.StatsNames, obj.SelectionCriterion));
+        function obj = setFitFun(obj, fun)
+            % Sets a different fitness function.
+            assert(isa(fun, 'FitnessFunction'), "error: unknown FitnessFunction")
+            % only change if they aren't the same
+            if ~strcmp(obj.FitFun.disp, fun.disp)
+                obj.FitFun = fun;
+                % re-set fitness values
+                obj.CurrentStats(:,end) = 0;
+            end
         end
 
         function idx = find(obj, statName)
             % Returns index of selection criterion option in Stats arrays.
             idx = find(strcmp(obj.StatsNames, statName));
-        end
-
-        function obj = makeLossPositive(obj)
-            % Reservoirs store loss as negative value to allow for a
-            % general optimization algorithm that maximizes utility. This
-            % function make loss as stored in StatsLog positive again.
-            obj.StatsLog.Avg(:, obj.find('loss')) = abs(obj.StatsLog.Avg(:, obj.find('loss')));
-            obj.StatsLog.Max(:, obj.find('loss')) = abs(obj.StatsLog.Max(:, obj.find('loss')));
         end
 
         function obj = evaluate(obj, indices)
@@ -211,10 +189,6 @@ classdef Population
                     obj = obj.takeLog;
                 end
             end
-
-            % flip the sign of loss in StatsLog from - to +
-            obj = obj.makeLossPositive;
-
         end
 
     end
@@ -291,10 +265,11 @@ classdef Population
 
         function obj = updateStats(obj, idx)
             % Update CurrentStats with evaluation results of idx-th reservoir.
-            obj.CurrentStats(idx, :) = obj.Reservoirs{idx}.Results;
+            obj.CurrentStats(idx, 1:end-1) = obj.Reservoirs{idx}.Results;
+            % update Fitness
+            obj.CurrentStats(idx, end) = obj.FitFun.getScore(obj.Reservoirs{idx});
             % get the index of the best individual
-            [~, bestIndividual] = max(obj.CurrentStats(:, obj.Select));
-            obj.Fittest = bestIndividual;
+            [~, obj.Fittest] = max(obj.CurrentStats(:, end));
         end
 
         function obj = takeLog(obj)
@@ -311,7 +286,7 @@ classdef Population
         function [winner, loser] = tournament(obj)
             % Randomly selects two genotypes and compares their fitness.
             candidates = datasample(1:obj.Size, 2, 'Replace', false);
-            if obj.fitness(candidates(1)) > obj.fitness(candidates(2)) 
+            if obj.CurrentStats(candidates(1),end) > obj.CurrentStats(candidates(2),end) 
                 winner = candidates(1);
                 loser = candidates(2);
             else
