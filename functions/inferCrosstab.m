@@ -17,7 +17,7 @@ a = pXY*N;
 b = pX*N-a;
 c = pY*N-a;
 d = N-(a+b+c);
-ctab = [d,c,b,a];
+ctab = [d,c;b,a];
 
 end
 
