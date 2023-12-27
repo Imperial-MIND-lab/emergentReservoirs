@@ -95,7 +95,7 @@ switch analysisName
     case 'analysis02B'
     % analysis 02B
     % Further checks of loss-psi relationship in the context of generalisability
-    % (run with jobIDs 1-6)
+    % (run with jobIDs 1-10)
     
         % set seed according to jobID
         config.seed = jobID;
