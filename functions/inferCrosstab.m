@@ -13,10 +13,10 @@ function [ctab] = inferCrosstab(pX, pY, pXY, N)
 % -------
 % ctab (2x2, int): [d,c,b,a] = [#notXnotY, #notXY; #XnotY, #XY]
 
-a = pXY*N;
-b = pX*N-a;
-c = pY*N-a;
-d = N-(a+b+c);
+a = ceil(pXY*N);
+b = ceil(pX*N-a);
+c = ceil(pY*N-a);
+d = ceil(N-(a+b+c));
 ctab = [d,c;b,a];
 
 end
