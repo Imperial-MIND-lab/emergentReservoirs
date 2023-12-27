@@ -2,7 +2,9 @@ classdef Reservoir
 % Recurrent neural network reservoir class
 
     properties (Constant)
-        ResultNames = {'psi', 'vmi', 'xmi', 'loss', 'tstar'};
+        ResultNames = {'psi', 'vmi', 'xmi', ...     % emergence measures
+                       'loss', 'tstar', ...         % performance measures
+                       'ps', 'pe', 'pse'};          % probability measures
     end
 
     properties (Hidden)
@@ -19,6 +21,7 @@ classdef Reservoir
         C = [];               % connectivity matrix (NxN)
         Ctype = [];           % 'human' or 'random'
         Evolved = 'loss';     % fetches optimised default GeneParams
+        LossThreshold = 1;    % prediction failed, if loss exceeded threshold
 
         % User-modifiable properties with Ctype-specific defaults (GeneParams):
         SR                    % spectral radius of the connectivity matrix
@@ -545,13 +548,18 @@ classdef Reservoir
             [loss, tstar] = computePerformance(o, utest);
             results = zeros(1, length(obj.ResultNames));
             if isreal(psi)
-                results(obj.find('psi','vmi','xmi','loss','tstar')) = ...
-                                 [psi, vmi, xmi, -loss, tstar];
+                % probability results
+                ps = loss<obj.LossThreshold;
+                pe = psi>0;
+                pse = and(ps, pe);
+                % fill in results output variable
+                results(obj.find('psi','vmi','xmi','loss','tstar','ps', 'pe', 'pse')) = ...
+                                 [psi, vmi, xmi, -loss, tstar, ps, pe, pse];
             else
                 % if psi is complex, o or R must have been too highly
                 % correlated or constant and psi estimates are numerically
                 % instable. Hence, penalize.
-                results = [-inf, -inf, -inf, -inf, -inf];
+                results = repmat(-inf, [1 length(obj.ResultNames)]);
             end
         end
 
