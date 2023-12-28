@@ -124,6 +124,30 @@ switch analysisName
         % define output file name
         filename = [analysisName, '_', num2str(jobID), '.mat'];
 
+    case 'analysis02G1'
+    % analysis 02G: evolving populations for both prediction performance
+    % and emergence. 
+    % (run with JobIDs 1-200)
+        
+        % extract configs for this job
+        config.populationProperties = table2struct(config.populationProperties(jobID, :));
+        config.seed = config.seed(jobID);
+    
+        % add human connectome for neuromorphic reservoir populations
+        sc = getConfig();
+        config.populationProperties.C = sc.C;
+
+        % run analysis
+        tic
+        results = analysis02G1(config);
+        toc
+        
+        % define file name for saving outputs
+        filename = [analysisName, '_', ...
+                    config.populationProperties.Env, '_', ...
+                    'alpha', num2str(config.alpha(jobID)), '_', ...
+                    num2str(config.seed), '.mat'];
+
     otherwise
         error(strcat("unknown analysis ", analysisName))
 end

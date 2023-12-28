@@ -169,6 +169,47 @@ switch analysisName
                                    'SprottK', 'SprottR'};
         end
 
+% Analysis02G1 configurations -------------------------------------------- %
+    case 'analysis02G1'
+
+        if testRun
+            % number of populations (repetitions) per environment
+            config.PopsPerEnv = 1;    
+            config.numGenerations = 100;
+            % Population properties
+            LogFreq = {10};
+            Size = {3};
+            nTest = {3};
+            alpha = 0:0.5:1;
+        else
+            % number of populations (repetitions) per environment
+            config.PopsPerEnv = 10;
+            config.numGenerations = 3000;
+            % Population properties
+            LogFreq = {10};
+            Size = {100};
+            nTest = {100};
+            alpha = 0:0.25:1;
+        end
+
+        % create array with environment names
+        environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottR'};
+        Env = repmat(environments', [config.PopsPerEnv 1]);
+
+        % create a grid with all parameter combinations
+        [LF, SZ, NT, EN, A] = ndgrid(LogFreq, Size, nTest, Env, alpha);
+        fitfuns = arrayfun(@(a) MaxPSMaxPE('alpha', a), A(:), 'UniformOutput', false);
+        config.populationProperties = table(LF(:), SZ(:), NT(:), EN(:), fitfuns(:), ...
+                   'VariableNames', {'LogFreq', 'Size', 'nTest', 'Env', 'FitFun'});
+
+        % for reference
+        config.alpha = A(:);
+
+        % make sure that within each environment, for each alpha there is
+        % one population with the same random seed
+        seeds = kron(1:config.PopsPerEnv, ones(1, length(environments)));
+        config.seed = repmat(seeds, [1 length(alpha)])+33;
+
 % default output is structural connectivity ----------------------------- %
     otherwise
         config.C = sc;
