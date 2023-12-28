@@ -125,8 +125,8 @@ switch analysisName
         filename = [analysisName, '_', num2str(jobID), '.mat'];
 
     case 'analysis02G1'
-    % analysis 02G: evolving populations for both prediction performance
-    % and emergence. 
+    % analysis 02G: Generalisability analysis part 1 - evolving populations 
+    % for both prediction performance and emergence. 
     % (run with JobIDs 1-200)
         
         % extract configs for this job
@@ -147,6 +147,19 @@ switch analysisName
                     config.populationProperties.Env, '_', ...
                     'alpha', num2str(config.alpha(jobID)), '_', ...
                     num2str(config.seed), '.mat'];
+
+    case 'analysis02G2'
+    % analysis 02G2: Generalisability analysis part 2 - evaluating
+    % populations that were evolved in 02G part 1 on unseen data.
+    % (run as single job, i.e. jobID=1)
+    
+        % run analysis
+        tic
+        results = analysis02G2(config);
+        toc
+       
+        % define output file name
+        filename = [analysisName, '_', num2str(jobID), '.mat'];
 
     otherwise
         error(strcat("unknown analysis ", analysisName))

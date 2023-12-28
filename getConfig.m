@@ -210,6 +210,23 @@ switch analysisName
         seeds = kron(1:config.PopsPerEnv, ones(1, length(environments)));
         config.seed = repmat(seeds, [1 length(alpha)])+33;
 
+% Analysis02G2 configurations -------------------------------------------- %
+    case 'analysis02G2'
+
+        if testRun
+            config.T = struct('spinup', 500, ...            
+                              'train', 2000, ...
+                              'test', 500);
+            config.nTest = 10;
+            config.resultNames = {'ps', 'pe', 'pse'};
+        else
+            config.T = struct('spinup', 500, ...            
+                              'train', 2000, ...
+                              'test', 500);
+            config.nTest = 100;
+            config.resultNames = {'ps', 'pe', 'pse'};
+        end
+
 % default output is structural connectivity ----------------------------- %
     otherwise
         config.C = sc;
