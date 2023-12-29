@@ -12,38 +12,34 @@ function [results] = analysis01B(config)
 %
 % Returns
 % -------
-% results (struct) with fields:
-%   loss (nTest x nTrain, double) : loss of n test sequences for each n
-%                                   training times
-%   psi (nTest x nTrain, double) :  psi of n test sequences for each n
-%                                   training times
-
-rng('shuffle')
+% results (table) with columns:
+%   loss (double) : mean test loss for each training time
+%   pe (double) :  P(psi>0) for each training time
 
 % create output variable
 nTrain = length(config.trainTimes);
-results = struct('loss', zeros(config.nTest, nTrain), ...
-                 'psi', zeros(config.nTest, nTrain));
+results = table('Size', [nTrain, 2], ...
+                'VariableTypes', {'double', 'double'}, ...
+                'VariableNames', {'loss', 'pe'});
 
 % build reservoir with loss-optimised parameters
 rc = Reservoir(config.reservoirProperties{:});
 
-% generate a train input sample
+% generate a test and train input sample
 utrain = generateInput(config.trainTimes(end)+rc.Spinup, 1, rc.Env);
+utest = generateInput(config.testTime+rc.Spinup, config.nTest, rc.Env);
 
-for run = 1:config.nTest
-    % generate a train and test input sample
-    utest = generateInput(config.testTime+rc.Spinup, 1, rc.Env);
+for t = 1:nTrain
+    % evaluate reservoir for each train time length
+    rc = rc.evaluate(utrain(:, 1:config.trainTimes(t)+rc.Spinup), utest);
 
-    for t = 1:nTrain
-        % evaluate reservoir for each train time length
-        rc = rc.evaluate(utrain(:, 1:config.trainTimes(t)+rc.Spinup), utest);
-    
-        % store results
-        results.loss(run,t) = abs(rc.getResult('loss'));
-        results.psi(run,t) = rc.getResult('psi');
-    end
+    % store results
+    results.loss(t) = rc.getResult('loss');
+    results.pe(t) = rc.getResult('pe');
 end
+
+% add trainTimes to results table
+results.trainTimes = config.trainTimes';
 
 end
 

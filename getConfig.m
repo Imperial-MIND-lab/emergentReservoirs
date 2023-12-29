@@ -75,15 +75,15 @@ switch analysisName
         if testRun
             config.environment = 'Lorenz';
             config.reservoirProperties = {'C', sc, 'Env', config.environment};
-            config.nTest = 2;
+            config.nTest = 10;
             config.testTime = 1000;
             config.trainTimes = 10:50:2000;
         else
             config.environment = 'Lorenz';
             config.reservoirProperties = {'C', sc, 'Env', config.environment};
-            config.nTest = 10;
+            config.nTest = 100;
             config.testTime = 1000;
-            config.trainTimes = 10:50:2000;
+            config.trainTimes = 10:20:2000;
         end
 
 % Analysis01C configurations -------------------------------------------- %

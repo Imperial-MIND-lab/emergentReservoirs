@@ -16,24 +16,23 @@ for file = 1:length(files)
 
     % load config and results of analysis
     results = load(fullfile(paths.outputs, analysisName, files(file).name)).results;
-    config = load(fullfile(paths.outputs, analysisName, files(file).name)).config;
 
-    % get a different colour for each test sequence
-    colours = winter(config.nTest);
-    
     % plot 1: loss vs. train time (highlight psi>0)
     figure
     hold on
-    for run = 1:config.nTest
-        emergent = results.psi(run,:)>0;
-        scatter(config.trainTimes(~emergent), results.loss(run, ~emergent), ...
-                'MarkerEdgeColor', colours(run,:), ...
-                'MarkerFaceColor', 'none')
-        scatter(config.trainTimes(emergent), results.loss(run, emergent), ...
-                'MarkerFaceColor', colours(run,:), ...
-                'MarkerEdgeColor', colours(run,:), ...
-                'MarkerFaceAlpha', 0.7)
-    end
+    % if P(psi>0)==0, plot in grey
+    scatter(results(results.pe==0,:), 'trainTimes', 'loss', ...
+            'MarkerFaceColor', [1 1 1]*0.35, ...
+            'MarkerEdgeColor', 'none')
+    % if P(psi>0)<0, plot in colour according to P(psi>0)
+    scatter(results(results.pe~=0,:), 'trainTimes', 'loss', ...
+            'ColorVariable', 'pe', ...
+            'MarkerFaceColor','flat', ...
+            'MarkerFaceAlpha', 0.7, ...
+            'MarkerEdgeColor', 'none')
+    colormap('winter')
+    cb = colorbar;
+    cb.Label.String = 'P(E)';
     grid on
     set(gca, 'YScale', 'log')
     xlabel('training time')
@@ -41,7 +40,7 @@ for file = 1:length(files)
 
     % save plot
     if saveFigures
-        savefigs(fullfile(paths.figures, analysisName), files(file).name, true)
+        savefigs(fullfile(paths.figures, analysisName), files(file).name(1:end-4), true)
         close all
     end
 end
