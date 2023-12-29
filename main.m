@@ -59,7 +59,7 @@ switch analysisName
     toc
 
     % define output file name
-    filename = [analysisName, '_', config.environment, '.mat'];
+    filename = [analysisName, '_', config.environment, '_', num2str(jobID), '.mat'];
 
     case 'analysis01C'
     % analysis 01C:

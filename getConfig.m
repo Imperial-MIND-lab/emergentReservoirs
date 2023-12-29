@@ -75,17 +75,15 @@ switch analysisName
         if testRun
             config.environment = 'Lorenz';
             config.reservoirProperties = {'C', sc, 'Env', config.environment};
-            config.nTest = 1;
-            config.testTime = 500;
-            config.trainTimeRange = [10, 2000];
-            config.nTrain = 50;
+            config.nTest = 2;
+            config.testTime = 1000;
+            config.trainTimes = 10:50:2000;
         else
             config.environment = 'Lorenz';
             config.reservoirProperties = {'C', sc, 'Env', config.environment};
-            config.nTest = 1;
-            config.testTime = 500;
-            config.trainTimeRange = [10, 2000];
-            config.nTrain = 100;
+            config.nTest = 10;
+            config.testTime = 1000;
+            config.trainTimes = 10:50:2000;
         end
 
 % Analysis01C configurations -------------------------------------------- %
@@ -96,14 +94,14 @@ switch analysisName
             config.optimisedFor = {'loss', 'psi'};
             config.nTest = 2;
             config.trainTime = 2000;
-            config.testTime = 500;
+            config.testTime = 1000;
             config.numRandomizations = 1;
         else
             config.reservoirProperties = {'C', sc, 'Env', 'Lorenz'};
             config.optimisedFor = {'loss', 'psi'};
             config.nTest = 100;
             config.trainTime = 2000;
-            config.testTime = 500;
+            config.testTime = 1000;
             config.numRandomizations = 10;
         end
 
@@ -113,13 +111,13 @@ switch analysisName
         if testRun
             T = struct('spinup', 500, ...            
                        'train', 2000, ...
-                       'test', 500);
+                       'test', 1000);
             config.populationProperties = {'C', sc, 'Size', 100, 'nTest', 100, 'T', T};
             config.environments = {'Lorenz', 'SprottA', 'SprottR'};
         else
             T = struct('spinup', 500, ...            
                        'train', 2000, ...
-                       'test', 500);
+                       'test', 1000);
             config.populationProperties = {'C', sc, 'Size', 1000, 'nTest', 100, 'T', T};
             config.environments = {'Lorenz', ...
                                    'SprottA', 'SprottB', ...

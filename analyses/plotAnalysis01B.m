@@ -8,55 +8,40 @@ end
 
 % get file paths
 paths = addPaths();
+analysisName = 'analysis01B';
 
 % get names of all files in analysis directory
-files = dir(fullfile(paths.outputs, "analysis01B", "*.mat"));
+files = dir(fullfile(paths.outputs, analysisName, "*.mat"));
 for file = 1:length(files)
 
     % load config and results of analysis
-    results = load(fullfile(paths.outputs, "analysis01B", files(file).name)).results;
+    results = load(fullfile(paths.outputs, analysisName, files(file).name)).results;
+    config = load(fullfile(paths.outputs, analysisName, files(file).name)).config;
 
+    % get a different colour for each test sequence
+    colours = winter(config.nTest);
+    
     % plot 1: loss vs. train time (highlight psi>0)
-    emergent = results.psi>0;
     figure
     hold on
-    scatter(results.trainTime(~emergent), results.loss(~emergent), ...
-            'MarkerFaceColor', [1 1 1]*0.35, ...
-            'MarkerEdgeColor', 'none', ...
-            'MarkerFaceAlpha', 0.7)
-    colormap("winter")
-    scatter(results(emergent, :), 'trainTime', 'loss', ...
-            'ColorVariable', 'psi', ...
-            'MarkerFaceColor', 'flat', ...
-            'MarkerEdgeColor', 'none', ...
-            'MarkerFaceAlpha', 0.7)
+    for run = 1:config.nTest
+        emergent = results.psi(run,:)>0;
+        scatter(config.trainTimes(~emergent), results.loss(run, ~emergent), ...
+                'MarkerEdgeColor', colours(run,:), ...
+                'MarkerFaceColor', 'none')
+        scatter(config.trainTimes(emergent), results.loss(run, emergent), ...
+                'MarkerFaceColor', colours(run,:), ...
+                'MarkerEdgeColor', colours(run,:), ...
+                'MarkerFaceAlpha', 0.7)
+    end
     grid on
     set(gca, 'YScale', 'log')
     xlabel('training time')
     ylabel('loss')
-    cb = colorbar;
-    cb.Label.String = 'psi';
 
-    % plot 2: loss vs. psi
-    figure;
-    colormap('winter')
-    scatter(results, 'psi', 'loss', ...
-            'ColorVariable', 'trainTime', ...
-            'MarkerFaceColor', 'flat', ...
-            'MarkerEdgeColor', 'none', ...
-            'MarkerFaceAlpha', 0.5)
-    grid on
-    set(gca, 'YScale', 'log')
-    xlabel('psi')
-    ylabel('loss')
-    [r, p] = corr(results.psi, results.loss, 'type', 'Spearman');
-    title(strcat("r = ", num2str(r), "; p = ", num2str(p)))
-    cb = colorbar;
-    cb.Label.String = 'training time';
-
-    % save plots
+    % save plot
     if saveFigures
-        savefigs(fullfile(paths.figures, "analysis01B"), files(file).name, true)
+        savefigs(fullfile(paths.figures, analysisName), files(file).name, true)
         close all
     end
 end
