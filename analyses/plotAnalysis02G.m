@@ -56,8 +56,8 @@ for env = 1:numEnvs
     swarmchart(slice, 'alpha', yName, 'ColorVariable', 'seed', ...
                'MarkerFaceColor', 'flat', 'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none');
     hold off
-    ylim([min(slice.(yName))-0.05 max(slice.(yName))+0.05])
-    title(thisEnv)
+    ylim([min(slice.(yName))-0.025 max(slice.(yName))+0.05])
+    title(['generalisability: ', thisEnv])
     ylabel('P(S)')
 
     % % connect dots of same seeds with lines
@@ -71,6 +71,10 @@ for env = 1:numEnvs
     %         line(xPos, yPos, 'Color', colours(s,:))
     %     end
     % end
+    if saveFigures
+        savefigs(fullfile(paths.figures, analysisName), ['generalisability_',thisEnv], true)
+        close all
+    end
 end
 
 %% transfer learning plots
@@ -109,9 +113,14 @@ for env = 1:numEnvs
     swarmchart(slice, 'alpha', 'psJ', 'ColorVariable', 'seed', ...
                'MarkerFaceColor', 'flat', 'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none');
     hold off
-    ylim([min(slice.psJ)-0.05 max(slice.psJ)+0.05])
-    title(thisEnv)
+    ylim([min(slice.psJ)-0.025 max(slice.psJ)+0.05])
+    title(['transfer learning: ', thisEnv])
     ylabel('mean Pj(S)')
+
+    if saveFigures
+        savefigs(fullfile(paths.figures, analysisName), ['transferLearning_',thisEnv], true)
+        close all
+    end
 end
 
 end
