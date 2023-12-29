@@ -18,7 +18,6 @@ function results = analysis01D(config)
 %   psEnvX (double) : P(S) in task X
 %   peEnvX (double) : P(E) in task X
 %   pseEnvX (double) : P(S,E) in task X
-%   signEnvX (logical) : if Fisher's exact test yielded p<0.05
 
 % make sure to have different random seeds for different batches
 rng(config.seed)
@@ -28,7 +27,7 @@ population = Population(config.populationProperties{:});
 
 % get/assign some variables
 numEnvs = length(config.environments);
-metrics = {'sign', 'ps', 'pe', 'pse'};
+metrics = {'ps', 'pe', 'pse'};
 numMetrics = length(metrics);
 
 % create output variable
@@ -50,18 +49,6 @@ for env = 1:numEnvs
     for m = 2:numMetrics
         results.([metrics{m}, thisEnv]) = population.getStats(metrics{m});
     end
-
-    % test for dependence between S and E using Fisher's exact test
-    % only consider if there were instances of success and emergence at all
-    consider = find(~or(results.(['ps', thisEnv])==0, ...
-                        results.(['pe', thisEnv])==0));
-    results.(['sign', thisEnv])(:) = false;
-    results.(['sign', thisEnv])(consider) =  ...
-    arrayfun(@(r) fishertest(inferCrosstab(results.(['ps', thisEnv])(r), ...
-                                           results.(['pe', thisEnv])(r), ...
-                                           results.(['pse', thisEnv])(r), ...
-                                           population.nTest)), ...
-                                           consider);
 end
 
 end

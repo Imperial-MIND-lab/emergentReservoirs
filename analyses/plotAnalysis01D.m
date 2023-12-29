@@ -139,7 +139,6 @@ end
         % one plot with all environments
         y = zeros(sum(~ignore(:)),1);
         x = zeros(size(y));
-        sign = ~true(size(y));
         
         % aggregate data from all environments
         start = 1; 
@@ -150,7 +149,6 @@ end
             stop = start+length(boxData.(thisEnv))-1;
             y(start:stop) = boxData.(thisEnv);
             x(start:stop) = i;
-            sign(start:stop) = logical(results.(['sign',thisEnv])(~ignore(:, i)));
             
             % update start point
             start = stop+1;
@@ -162,11 +160,8 @@ end
                  'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
                  'LineWidth', 1, 'MarkerStyle', 'none');
         hold on
-        swarmchart(x(sign), y(sign), ...
-                   [], 'MarkerFaceColor', [1 0 0], ...
-                   'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none')
-        swarmchart(x(~sign), y(~sign), ...
-                   [], 'MarkerFaceColor', [1 1 1]*0.7, ...
+        swarmchart(x, y, ...
+                   7, 'MarkerFaceColor', [1 0 0], ...
                    'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none')
         yline(0, 'LineWidth', 1, 'LineStyle', '--', 'Color', [1 1 1]*0.6)
         hold off
