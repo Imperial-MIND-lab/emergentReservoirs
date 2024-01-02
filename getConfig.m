@@ -143,7 +143,7 @@ switch analysisName
                                    'SprottK', 'SprottR'};
             config.repetitions = 100;
             config.trainTime = 2000;
-            config.testTime = 500;
+            config.testTime = 1000;
             config.Spinup = 500;
             config.outcomeMeasures = {'loss', 'psi', 'vmi', 'xmi'};
         end
@@ -154,13 +154,13 @@ switch analysisName
         if testRun
             T = struct('spinup', 500, ...            
                        'train', 2000, ...
-                       'test', 500);
+                       'test', 1000);
             config.populationProperties = {'C', sc, 'Size', 100, 'nTest', 1, 'T', T};
             config.environments = {'SprottA', 'SprottB', 'SprottE'};
         else
             T = struct('spinup', 500, ...            
                        'train', 2000, ...
-                       'test', 500);
+                       'test', 1000);
             config.populationProperties = {'C', sc, 'Size', 1000, 'nTest', 100, 'T', T};
             config.environments = {'SprottA', 'SprottB', ...
                                    'SprottE', 'SprottG', ...
@@ -214,15 +214,35 @@ switch analysisName
         if testRun
             config.T = struct('spinup', 500, ...            
                               'train', 2000, ...
-                              'test', 500);
+                              'test', 1000);
             config.nTest = 10;
             config.resultNames = {'ps', 'pe', 'pse'};
         else
             config.T = struct('spinup', 500, ...            
                               'train', 2000, ...
-                              'test', 500);
+                              'test', 1000);
             config.nTest = 100;
             config.resultNames = {'ps', 'pe', 'pse'};
+        end
+
+% Analysis03A configurations -------------------------------------------- %
+    case 'analysis03A'
+
+        if testRun
+            config.T = struct('spinup', 500, ...            
+                              'train', 2000, ...
+                              'test', 1000);
+            config.nTest = 1;
+            config.resultNames = {'ps', 'pe'};
+            config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottR'};
+        else
+            config.T = struct('spinup', 500, ...            
+                              'train', 2000, ...
+                              'test', 1000);
+            config.nTest = 100;
+            config.resultNames = {'loss', 'psi', 'vmi', 'xmi', 'ps', 'pe', 'pse'};
+            config.environments = {'Lorenz', 'SprottA', 'SprottB', ...
+                                   'SprottE', 'SprottG', 'SprottK', 'SprottR'};
         end
 
 % default output is structural connectivity ----------------------------- %

@@ -161,6 +161,19 @@ switch analysisName
         % define output file name
         filename = [analysisName, '_', num2str(jobID), '.mat'];
 
+   case 'analysis03A'
+    % analysis 03A:
+    % Neuromorphic vs. randomly connected reservoirs.
+    % (run as single job, i.e. jobID = 1)
+    
+        % run analysis
+        tic
+        results = analysis03A(config);
+        toc
+        
+        % define output file name
+        filename = [analysisName, '_', num2str(jobID), '.mat'];
+
     otherwise
         error(strcat("unknown analysis ", analysisName))
 end
