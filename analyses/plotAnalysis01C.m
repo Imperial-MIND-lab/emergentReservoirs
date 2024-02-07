@@ -23,15 +23,33 @@ for file = 1:length(files)
     % plot results for this job
     metrics = fieldnames(results);
     for m = 1:length(metrics)
+
+        % set colour
+        if strcmp(config.optimisedFor{1}, 'psi')
+            colour = [1 0 0];
+        else
+            colour = [1 1 1].*0.15;
+        end
+
+        % plotting
         xPos = kron([1; 2], ones(size(results.(metrics{m}), 1), 1));
-        boxplot_hmt(results.(metrics{m})(:), xPos, 1, {'trained', 'random'});
+        stats = boxSwarmPlot(results.(metrics{m})(:), xPos, 1, colour);
         ylabel(metrics{m})
         subtitle(strcat("optimised for ", config.optimisedFor{1}))
+        set(gca, 'XTick', 1:2, 'XTickLabel', {'trained', 'random'})
     
         % save plots
         if saveFigures
             figname = [analysisName, '_', metrics{m}, '_', config.optimisedFor{1},'-optimised'];
             savefigs(fullfile(paths.figures, analysisName), figname, true)
+            % save stats
+            cd(paths.figures)
+            if ~exist(analysisName, 'dir')
+                mkdir(analysisName)
+            end
+            cd(analysisName)
+            writetable(struct2table(stats), strcat(figname,"_statistics.csv"))
+            cd(paths.main)
             close all
         end
     end

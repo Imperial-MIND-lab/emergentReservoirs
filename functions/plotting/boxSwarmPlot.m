@@ -43,7 +43,10 @@ if numBoxes==2
     maxVal = max(y);
     minVal = min(y);
     yOffset = (maxVal-minVal)*0.15;
-    ylim([minVal-0.5*yOffset maxVal+yOffset])
+
+    if maxVal>minVal
+        ylim([minVal-0.5*yOffset maxVal+yOffset])                                
+    end
     
     % add asterisks to plot if p<0.05
     asterisk = get_asterisk(stats.p);
