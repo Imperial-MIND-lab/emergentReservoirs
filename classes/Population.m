@@ -118,9 +118,9 @@ classdef Population
             end
         end
 
-        function stats = getStats(obj, statName)
+        function stats = getStats(obj, varargin)
             % Access current evaluation results of all reservoirs by str name.
-            stats = obj.CurrentStats(:, obj.find(statName));
+            stats = obj.CurrentStats(:, obj.find(varargin{:}));
         end
 
         function obj = setFitFun(obj, fun)
@@ -134,9 +134,9 @@ classdef Population
             end
         end
 
-        function idx = find(obj, statName)
-            % Returns index of selection criterion option in Stats arrays.
-            idx = find(strcmp(obj.StatsNames, statName));
+        function indices = find(obj, varargin)
+            % Returns indices of reservoir evoluation results in Stats arrays.
+            indices = arrayfun(@(i) find(strcmp(obj.StatsNames, varargin{i})), 1:length(varargin));
         end
 
         function obj = evaluate(obj, indices)
@@ -189,6 +189,15 @@ classdef Population
                     obj = obj.takeLog;
                 end
             end
+        end
+
+        function plotStatsDistr(obj, statsName)
+            % Plots the distribution of evaluation results from all
+            % reservoirs of the population.
+            figure();
+            histogram(obj.getStats(statsName), floor(obj.Size/20))
+            xlabel(statsName)
+            ylabel('count')
         end
 
     end
