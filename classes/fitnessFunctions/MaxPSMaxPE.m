@@ -3,7 +3,7 @@ classdef MaxPSMaxPE < FitnessFunction
     
     properties
         Params = struct('alpha', 0.5);
-        Spec = '-%0.2f*P(S)+(1-%0.2f)*P(E)';
+        Spec = '%0.2f*P(S)+(1-%0.2f)*P(E)';
     end
     
     methods
