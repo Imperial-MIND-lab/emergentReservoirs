@@ -247,6 +247,31 @@ switch analysisName
                                    'SprottE', 'SprottG', 'SprottK', 'SprottR'};
         end
 
+% Analysis03C configurations -------------------------------------------- %
+    case 'analysis03C'
+
+        if testRun
+            config.T = struct('spinup', 500, ...            
+                              'train', 2000, ...
+                              'test', 1000);
+            config.nTest = 10;
+            config.nTrain = 1;
+            config.resultNames = {'loss', 'psi', 'vmi', 'xmi', 'ps', 'pe', 'pse'};
+            config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottR'};
+        else
+            config.T = struct('spinup', 500, ...            
+                              'train', 2000, ...
+                              'test', 1000);
+            config.nTest = 100;
+            config.nTrain = 1;
+            config.resultNames = {'loss', 'psi', 'vmi', 'xmi', 'ps', 'pe', 'pse'};
+            config.environments = {'Lorenz', 'SprottA', 'SprottB', ...
+                                   'SprottE', 'SprottG', 'SprottK', 'SprottR'};
+        end
+
+        % load subject-individual connectomes
+        config.Cs = load("DTI_fibers_HCP.mat").DTI_fibers_HCP;
+
 % default output is structural connectivity ----------------------------- %
     otherwise
         config.C = sc;

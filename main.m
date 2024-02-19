@@ -174,6 +174,17 @@ switch analysisName
         % define output file name
         filename = [analysisName, '_', num2str(jobID), '.mat'];
 
+    case 'analysis03C'
+    % analysis 03C:
+    
+        % run analysis
+        tic
+        results = analysis03C(config);
+        toc
+        
+        % define output file name
+        filename = [analysisName, '_', num2str(jobID), '.mat'];
+
     otherwise
         error(strcat("unknown analysis ", analysisName))
 end
