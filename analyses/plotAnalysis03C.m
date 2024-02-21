@@ -55,5 +55,16 @@ for file = 1:length(files)
     end
 end
 
+% for i = 1:length(config.resultNames)
+%     figure();
+%     boxchart(results.environment, results.(config.resultNames{i}), 'GroupByColor', results.Ctype);
+%     ylabel(config.resultNames{i})
+%     figname = [analysisName, '_allEnvs', ...
+%                config.resultNames{i}, '_', ...
+%                num2str(file)];
+%     savefigs(fullfile(paths.figures, analysisName), figname, true)
+%     close all
+% end
+
 end
 
