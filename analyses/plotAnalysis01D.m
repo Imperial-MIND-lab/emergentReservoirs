@@ -25,30 +25,34 @@ for env = 1:numEnvs
     ignore(:,env) = or(results.(['pe',thisEnv])==0, results.(['ps',thisEnv])==0);
     % calculate P(S|E) = P(S,E)/P(E)
     conditional = results.(['pse',thisEnv])(~ignore(:,env))./results.(['pe',thisEnv])(~ignore(:,env));
-    % calculate P(S|E)-P(S)
-    boxData.(thisEnv) = conditional-results.(['ps',thisEnv])(~ignore(:,env));
+    % concatenate [P(S|E), P(S), P(S|E)-P(S)]
+    boxData.(thisEnv) = [conditional, results.(['ps',thisEnv])(~ignore(:,env)), conditional-results.(['ps',thisEnv])(~ignore(:,env))];
 end
 
 %% statistical tests
 
 % save results from statistical tests
-stats = table('Size', [numEnvs, 6], ...
-              'VariableTypes', repmat({'double'}, [1 6]), ...
-              'VariableNames', {'tstat', 'df', 'sd', 'mean', 'pVal', 'fdr'});
+statsNames = {'tstat', 'hedgesg', 'df', 'sd', 'mean', 'pVal', 'fdr'};
+numStats = length(statsNames);
+stats = table('Size', [numEnvs, numStats], ...
+              'VariableTypes', repmat({'double'}, [1 numStats]), ...
+              'VariableNames', statsNames);
 
 for env = 1:numEnvs
     % extract environment name
     thisEnv = environments{env};
 
-    % statistical analysis (test if mean is different from 0)
-    [~, p, ~, s] = ttest(boxData.(thisEnv));
+    % dependent permutation test to check if P(S|E) differs from P(S)
+    s = mes(boxData.(thisEnv)(:, 1), boxData.(thisEnv)(:, 2), 'hedgesg', 'isDep', 1, 'nBoot', 10000);
     
     % save stats
-    stats.tstat(env) = s.tstat;
-    stats.df(env) = s.df;
-    stats.sd(env) = s.sd;
-    stats.mean(env) = mean(boxData.(thisEnv));
-    stats.pVal(env) = p;
+    stats.Properties.RowNames{env} = thisEnv;
+    stats.hedgesg(env) = s.hedgesg;
+    stats.tstat(env) = s.t.tstat;
+    stats.df(env) = s.t.df;
+    stats.pVal(env) = s.t.p;
+    stats.mean(env) = mean(boxData.(thisEnv)(:,3));
+    stats.sd(env) = std(boxData.(thisEnv)(:,3));
 end
 
 % correct for multiple comparisons
@@ -146,8 +150,8 @@ end
             thisEnv = environments{i};
         
             % get data to plot
-            stop = start+length(boxData.(thisEnv))-1;
-            y(start:stop) = boxData.(thisEnv);
+            stop = start+length(boxData.(thisEnv)(:,3))-1;
+            y(start:stop) = boxData.(thisEnv)(:,3);
             x(start:stop) = i;
             
             % update start point
