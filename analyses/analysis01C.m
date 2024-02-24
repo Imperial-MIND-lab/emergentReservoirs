@@ -7,9 +7,11 @@ function [results] = analysis01C(config)
 % reservoirProperties (cell with name-value pairs for reservoir properties)
 
 % output variables
-results.psi = zeros(config.nTest, 2);
-results.vmi = zeros(config.nTest, 2);
-results.xmi = zeros(config.nTest, 2);
+metrics = {'psi', 'loss'};
+results = struct();
+for m = 1:length(metrics)
+    results.(metrics{m}) = zeros(config.nTest, 2);
+end
 
 % measure psi of nTest test sequences 
 for n = 1:config.nTest
@@ -34,10 +36,10 @@ for n = 1:config.nTest
     [rc, R, o] = rc.forecast(config.testTime);
 
     % compute psi and vmi of forecast
-    [psi, vmi, xmi] = computeEmergence(o, R, rc.Tau);
-    results.psi(n, 1) = psi;
-    results.vmi(n, 1) = vmi;
-    results.xmi(n, 1) = xmi;
+    evaluationResults = rc.evaluateOutput(o, R, utest(:, rc.Spinup+1:end));
+    for m = 1:length(metrics)
+        results.(metrics{m})(n, 1) = evaluationResults(rc.find(metrics{m}));
+    end
 
     % generate random supervenient macro dynamics and measure psi
     for i = 1:config.numRandomizations
@@ -46,18 +48,21 @@ for n = 1:config.nTest
         for d = 1:rc.D
             Wout(d, :) = rc.Wout(d, randperm(rc.N));
         end
+
         % compute random supervenient output
         oRand = Wout*R;
+
         % compute psi and vmi of random output
-        [psi, vmi, xmi] = computeEmergence(oRand, R, rc.Tau);
-        results.psi(n, 2) = results.psi(n, 2) + psi;
-        results.vmi(n, 2) = results.vmi(n, 2) + vmi;
-        results.xmi(n, 2) = results.xmi(n, 2) + xmi;
+        evaluationResults = rc.evaluateOutput(oRand, R, utest(:, rc.Spinup+1:end));
+        for m = 1:length(metrics)
+            results.(metrics{m})(n, 2) = results.(metrics{m})(n, 2) + evaluationResults(rc.find(metrics{m}));
+        end
     end
+
     % average across randomizations
-    results.psi(n, 2) = results.psi(n, 2)/config.numRandomizations;
-    results.vmi(n, 2) = results.vmi(n, 2)/config.numRandomizations;
-    results.xmi(n, 2) = results.xmi(n, 2)/config.numRandomizations;
+    for m = 1:length(metrics)
+        results.(metrics{m})(n, 2) = results.(metrics{m})(n, 2)/config.numRandomizations;
+    end
 
 end
 
