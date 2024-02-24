@@ -1,4 +1,4 @@
-function [stats] = boxSwarmPlot(y, x, isDep, colour)
+function [stats] = boxSwarmPlot(y, x, isDep, colour, noOutliers)
 % create boxplot with significance labels and individual data points 
 % plotted on top (swarmchart);
 % INPUT
@@ -9,8 +9,11 @@ function [stats] = boxSwarmPlot(y, x, isDep, colour)
 if nargin<3 
     isDep = 0;
 end
-if nargin<4
+if nargin<4 || isempty(colour)
     colour = [1 0 0];
+end
+if nargin<5
+    noOutliers = false;
 end
 
 % determine number and xPositions of boxes
@@ -19,15 +22,30 @@ numBoxes = length(xPos);
 xPos = reshape(xPos, [1 numBoxes]);
 
 % make plot
-figure();
-boxchart(x, y, ...
-         'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
-         'LineWidth', 1, 'MarkerStyle', 'none');
-hold on
-swarmchart(x, y, ...
-           [], 'MarkerFaceColor', colour, ...
-           'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none')
-hold off
+if ~noOutliers
+    figure();
+    boxchart(x, y, ...
+             'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
+             'LineWidth', 1, 'MarkerStyle', 'none');
+    hold on
+    swarmchart(x, y, ...
+               [], 'MarkerFaceColor', colour, ...
+               'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none')
+    hold off
+    yPlottingData = y;
+else
+    outlierIdx = isoutlier(y, 'percentile', [5 95]);
+    figure();
+    boxchart(x(~outlierIdx), y(~outlierIdx), ...
+             'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
+             'LineWidth', 1, 'MarkerStyle', 'none');
+    hold on
+    swarmchart(x(~outlierIdx), y(~outlierIdx), ...
+               [], 'MarkerFaceColor', colour, ...
+               'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none')
+    hold off
+    yPlottingData = y(~outlierIdx);
+end
 
 % statistical testing currently only supported for 2 boxes
 stats = struct();
@@ -40,8 +58,8 @@ if numBoxes==2
     title(strcat("p =  ", num2str(stats.p), "; hedge's g = ", num2str(stats.hedgesg)))
 
     % scale y-axis limits to make space for asterisks
-    maxVal = max(y);
-    minVal = min(y);
+    maxVal = max(yPlottingData);
+    minVal = min(yPlottingData);
     yOffset = (maxVal-minVal)*0.15;
 
     if maxVal>minVal

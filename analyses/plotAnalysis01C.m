@@ -37,6 +37,12 @@ for file = 1:length(files)
         ylabel(metrics{m})
         subtitle(strcat("optimised for ", config.optimisedFor{1}))
         set(gca, 'XTick', 1:2, 'XTickLabel', {'trained', 'random'})
+        
+        % same plot without outlier
+        boxSwarmPlot(results.(metrics{m})(:), xPos, 1, colour, true);
+        ylabel(metrics{m})
+        subtitle(strcat("optimised for ", config.optimisedFor{1}, "; without outliers"))
+        set(gca, 'XTick', 1:2, 'XTickLabel', {'trained', 'random'})
     
         % save plots
         if saveFigures
