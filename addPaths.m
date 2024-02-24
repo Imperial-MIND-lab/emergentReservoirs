@@ -17,7 +17,7 @@ username = username(1:end-1);
 switch username
 
     case 'hanna'
-        paths.main = '/home/hanna/Code/projects/2023-PhD-emergentReservoirs';
+        paths.main = '/home/hanna/Code/projects/2023_emergentReservoirs';
         paths.external = '/home/hanna/Code/external/matlab';
         paths.data = fullfile(paths.main, 'data');
         paths.outputs = fullfile(paths.main, 'outputs', 'results');
