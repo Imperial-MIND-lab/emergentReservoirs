@@ -83,9 +83,9 @@ numAlphas = length(alphas);
 % colours = winter(numPops);
 
 % statistics
-globalStats = table('Size', [numEnvs, 2],...
-                    'VariableTypes', {'double', 'double'}, ...
-                    'VariableNames', {'pVal', 'Fstat'});
+globalStats = table('Size', [numEnvs, 3],...
+                    'VariableTypes', {'string', 'double', 'double'}, ...
+                    'VariableNames', {'environment', 'pVal', 'Fstat'});
 
 for env = 1:numEnvs
     % extract environment name
@@ -129,15 +129,16 @@ for env = 1:numEnvs
 
     % test for global effect of alpha (using ANOVA)
     lm = fitlm(slice, [yName, '~alpha']);
-    globalStats.Properties.RowNames{env} = thisEnv;
     globalStats.pVal(env)=lm.ModelFitVsNullModel.Pvalue;
     globalStats.Fstat(env)=lm.ModelFitVsNullModel.Fstat;
+    globalStats.environment(env) = thisEnv;
     
     % post-hoc testing, if global effect is significant
     if lm.ModelFitVsNullModel.Pvalue<0.05
-        posthocStats = table('Size', [0.5*(numAlphas*(numAlphas-1)), 9],...
-                             'VariableTypes', repmat({'double'}, [1, 9]), ...
-                             'VariableNames', {'alpha1', 'alpha2', 'hedgesg', 'tstat', 'pVal', 'df', 'mean_alpha1','mean_alpha2', 'sd_of_diff'});
+        varNames = {'alpha1', 'alpha2', 'hedgesg', 'tstat', 'pVal', 'fdr', 'df', 'mean_alpha1','mean_alpha2', 'sd_of_diff'};
+        posthocStats = table('Size', [0.5*(numAlphas*(numAlphas-1)), length(varNames)],...
+                             'VariableTypes', repmat({'double'}, [1, length(varNames)]), ...
+                             'VariableNames', varNames);
         comp = 1;
         for ai = 1:numAlphas-1
             for aj = ai+1:numAlphas
@@ -160,6 +161,9 @@ for env = 1:numEnvs
                 comp = comp+1;
             end
         end
+
+        % correct for multiple comparisons
+        posthocStats.fdr = fdr(posthocStats.pVal(:));
 
         % write post-hoc testing results to disk
         if saveFigures
@@ -200,9 +204,9 @@ end
 % boxplots of P(S) averaged across tasks j (j~=i) vs. alpha
 
 % statistics
-globalStats = table('Size', [numEnvs, 2],...
-                    'VariableTypes', {'double', 'double'}, ...
-                    'VariableNames', {'pVal', 'Fstat'});
+globalStats = table('Size', [numEnvs, 3],...
+                    'VariableTypes', {'string', 'double', 'double'}, ...
+                    'VariableNames', {'environment', 'pVal', 'Fstat'});
 
 for env = 1:numEnvs
     % extract environment name
@@ -243,15 +247,16 @@ for env = 1:numEnvs
 
     % test for global effect of alpha (using ANOVA)
     lm = fitlm(slice, 'psJ~alpha');
-    globalStats.Properties.RowNames{env} = thisEnv;
     globalStats.pVal(env)=lm.ModelFitVsNullModel.Pvalue;
     globalStats.Fstat(env)=lm.ModelFitVsNullModel.Fstat;
+    globalStats.environment(env) = thisEnv;
     
     % post-hoc testing, if global effect is significant
     if lm.ModelFitVsNullModel.Pvalue<0.05
-        posthocStats = table('Size', [0.5*(numAlphas*(numAlphas-1)), 9],...
-                             'VariableTypes', repmat({'double'}, [1, 9]), ...
-                             'VariableNames', {'alpha1', 'alpha2', 'hedgesg', 'tstat', 'pVal', 'df', 'mean_alpha1','mean_alpha2', 'sd_of_diff'});
+        varNames = {'alpha1', 'alpha2', 'hedgesg', 'tstat', 'pVal', 'fdr', 'df', 'mean_alpha1','mean_alpha2', 'sd_of_diff'};
+        posthocStats = table('Size', [0.5*(numAlphas*(numAlphas-1)), length(varNames)],...
+                             'VariableTypes', repmat({'double'}, [1, length(varNames)]), ...
+                             'VariableNames', varNames);
         comp = 1;
         for ai = 1:numAlphas-1
             for aj = ai+1:numAlphas
@@ -274,6 +279,10 @@ for env = 1:numEnvs
                 comp = comp+1;
             end
         end
+
+        % correct for multiple comparisons
+        posthocStats.fdr = fdr(posthocStats.pVal(:));
+
         % write post-hoc testing results to disk
         if saveFigures
             cd(paths.figures)
@@ -281,7 +290,7 @@ for env = 1:numEnvs
                 mkdir(analysisName)
             end
             cd(analysisName)
-            writetable(posthocStats, strcat("generalisability_", thisEnv, "_posthocStatistics.csv"))
+            writetable(posthocStats, strcat("transferLearning_", thisEnv, "_posthocStatistics.csv"))
             cd(paths.main)
         
         % or print post-hoc testing results if no saveFigs=false
