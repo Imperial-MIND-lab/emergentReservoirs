@@ -23,10 +23,22 @@ for env = 1:numEnvs
     thisEnv = environments{env};
     % identify inconclusive observations
     ignore(:,env) = or(results.(['pe',thisEnv])==0, results.(['ps',thisEnv])==0);
-    % calculate P(S|E) = P(S,E)/P(E)
-    conditional = results.(['pse',thisEnv])(~ignore(:,env))./results.(['pe',thisEnv])(~ignore(:,env));
-    % concatenate [P(S|E), P(S), P(S|E)-P(S)]
-    boxData.(thisEnv) = [conditional, results.(['ps',thisEnv])(~ignore(:,env)), conditional-results.(['ps',thisEnv])(~ignore(:,env))];
+
+    % get marginals and joint: P(S), P(E), P(S,E)
+    ps = results.(['ps',thisEnv])(~ignore(:,env));
+    pe = results.(['pe',thisEnv])(~ignore(:,env));
+    pse = results.(['pse',thisEnv])(~ignore(:,env));
+
+    % calculate conditional: P(S|E) = P(S,E)/P(E)
+    conditional = pse./pe;
+    
+    % local mutal information
+    localMI = zeros(length(pse),1);
+    nz = pse~=0;
+    localMI(nz) = pse(nz).*log(pse(nz)./(ps(nz).*pe(nz)));
+
+    % concatenate results [P(S|E), P(S), P(S,E)*log(P(S,E)/P(S))]
+    boxData.(thisEnv) = [conditional, ps, localMI];
 end
 
 %% statistical tests
@@ -51,8 +63,9 @@ for env = 1:numEnvs
     stats.tstat(env) = s.t.tstat;
     stats.df(env) = s.t.df;
     stats.pVal(env) = s.t.p;
-    stats.mean(env) = mean(boxData.(thisEnv)(:,3));
-    stats.sd(env) = std(boxData.(thisEnv)(:,3));
+    notNan = ~isnan(boxData.(thisEnv)(:,3));
+    stats.mean(env) = mean(boxData.(thisEnv)(notNan,3));
+    stats.sd(env) = std(boxData.(thisEnv)(notNan,3));
 end
 
 % correct for multiple comparisons
@@ -169,7 +182,7 @@ end
         %            'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none')
         yline(0, 'LineWidth', 1, 'LineStyle', '--', 'Color', [1 1 1]*0.6)
         hold off
-        ylabel('P(S|E)-P(S)')
+        ylabel('P(S,E)*log(P(S,E)/(P(S)*P(E)))')
         set(gca, 'XTick', 1:thisNumEnvs, 'XTickLabel', environments)
         
         % add astertisks
