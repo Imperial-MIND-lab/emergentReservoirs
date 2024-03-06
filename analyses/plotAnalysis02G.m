@@ -101,19 +101,37 @@ for env = 1:numEnvs
                   strcmp(results.Properties.VariableNames, 'seed')],1)>0;
     slice = results(rowIdx, colIdx);
 
-    % make boxplot
+    % make line plot with error bars
+    means = arrayfun(@(a) mean(slice(slice.alpha==num2str(a),:).(yName)), alphas);
+    sds = arrayfun(@(a) std(slice(slice.alpha==num2str(a),:).(yName)), alphas);
     figure;
-    colormap('winter')
-    boxchart(slice.alpha, slice.(yName), ...
-             'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
-             'LineWidth', 1, 'MarkerStyle', 'none');
-    hold on
-    swarmchart(slice, 'alpha', yName, 'ColorVariable', 'seed', ...
-               'MarkerFaceColor', 'flat', 'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none');
-    hold off
-    ylim([min(slice.(yName))-0.025 max(slice.(yName))+0.05])
-    title(['generalisability: ', thisEnv])
+    plot(alphas, means, 'k-o')
+    d = 0.01;
+    for i = 1:numAlphas
+        % vertical error line
+        line([alphas(i) alphas(i)], [means(i)-sds(i) means(i)+sds(i)], 'Color', 'k')
+        % horizontal lines at the end of error line
+        line([alphas(i)-d alphas(i)+d], [means(i)+sds(i) means(i)+sds(i)], 'Color', 'k')
+        line([alphas(i)-d alphas(i)+d], [means(i)-sds(i) means(i)-sds(i)], 'Color', 'k')
+    end
+    xlim([alphas(1)-0.1 alphas(end)+0.1])
+    set(gca, 'XTick', alphas)
     ylabel('P(S)')
+    title(['generalisability: ', thisEnv])
+
+    % % make boxplot
+    % figure;
+    % colormap('winter')
+    % boxchart(slice.alpha, slice.(yName), ...
+    %          'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
+    %          'LineWidth', 1, 'MarkerStyle', 'none');
+    % hold on
+    % swarmchart(slice, 'alpha', yName, 'ColorVariable', 'seed', ...
+    %            'MarkerFaceColor', 'flat', 'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none');
+    % hold off
+    % ylim([min(slice.(yName))-0.025 max(slice.(yName))+0.05])
+    % title(['generalisability: ', thisEnv])
+    % ylabel('P(S)')
 
     % % connect dots of same seeds with lines
     % slice = sortrows(slice, 'alpha');
@@ -231,19 +249,37 @@ for env = 1:numEnvs
     end
     slice.psJ = slice.psJ./length(EnvsJ);
 
-    % make boxplot
+    % make line plot with error bars
+    means = arrayfun(@(a) mean(slice(slice.alpha==num2str(a),:).psJ), alphas);
+    sds = arrayfun(@(a) std(slice(slice.alpha==num2str(a),:).psJ), alphas);
     figure;
-    colormap('winter')
-    boxchart(slice.alpha, slice.psJ, ...
-             'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
-             'LineWidth', 1, 'MarkerStyle', 'none');
-    hold on
-    swarmchart(slice, 'alpha', 'psJ', 'ColorVariable', 'seed', ...
-               'MarkerFaceColor', 'flat', 'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none');
-    hold off
-    ylim([min(slice.psJ)-0.025 max(slice.psJ)+0.05])
+    plot(alphas, means, 'k-o')
+    d = 0.01;
+    for i = 1:numAlphas
+        % vertical error line
+        line([alphas(i) alphas(i)], [means(i)-sds(i) means(i)+sds(i)], 'Color', 'k')
+        % horizontal lines at the end of error line
+        line([alphas(i)-d alphas(i)+d], [means(i)+sds(i) means(i)+sds(i)], 'Color', 'k')
+        line([alphas(i)-d alphas(i)+d], [means(i)-sds(i) means(i)-sds(i)], 'Color', 'k')
+    end
+    xlim([alphas(1)-0.1 alphas(end)+0.1])
+    set(gca, 'XTick', alphas)
+    ylabel('P(S)')
     title(['transfer learning: ', thisEnv])
-    ylabel('mean Pj(S)')
+
+    % % make boxplot
+    % figure;
+    % colormap('winter')
+    % boxchart(slice.alpha, slice.psJ, ...
+    %          'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
+    %          'LineWidth', 1, 'MarkerStyle', 'none');
+    % hold on
+    % swarmchart(slice, 'alpha', 'psJ', 'ColorVariable', 'seed', ...
+    %            'MarkerFaceColor', 'flat', 'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none');
+    % hold off
+    % ylim([min(slice.psJ)-0.025 max(slice.psJ)+0.05])
+    % title(['transfer learning: ', thisEnv])
+    % ylabel('mean Pj(S)')
 
     % test for global effect of alpha (using ANOVA)
     lm = fitlm(slice, 'psJ~alpha');
