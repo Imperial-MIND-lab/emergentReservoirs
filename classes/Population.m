@@ -141,7 +141,16 @@ classdef Population
 
         function indices = find(obj, varargin)
             % Returns indices of reservoir evoluation results in Stats arrays.
-            indices = arrayfun(@(i) find(strcmp(obj.StatsNames, varargin{i})), 1:length(varargin));
+            try
+                indices = arrayfun(@(i) find(strcmp(obj.StatsNames, varargin{i})), 1:length(varargin));
+            catch ME
+                % this means that this population doesn't have StatsNames
+                % for some reason. Get StatsNames from reservoirs.
+                if strcmp(ME.identifier, 'MATLAB:arrayfun:NotAScalarOutput')
+                    statsNames = [obj.Reservoirs{1}.ResultNames(:)', 'fitness'];
+                    indices = arrayfun(@(i) find(strcmp(statsNames, varargin{i})), 1:length(varargin));
+                end
+            end
         end
 
         function obj = evaluate(obj, indices)
