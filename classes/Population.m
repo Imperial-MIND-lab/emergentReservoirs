@@ -123,6 +123,11 @@ classdef Population
             stats = obj.CurrentStats(:, obj.find(varargin{:}));
         end
 
+        function fitnessValues = getFitness(obj)
+            % Returns fitness values of all reservoirs in the population.
+            fitnessValues = obj.CurrentStats(:, end);
+        end
+
         function obj = setFitFun(obj, fun)
             % Sets a different fitness function.
             assert(isa(fun, 'FitnessFunction'), "error: unknown FitnessFunction")
