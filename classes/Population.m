@@ -128,6 +128,11 @@ classdef Population
             fitnessValues = obj.CurrentStats(:, end);
         end
 
+        function selectionCriterion = getSelectionCriterion(obj)
+            % Returns the name of the selection criterion.
+            selectionCriterion = obj.FitFun.Spec();
+        end
+
         function obj = setFitFun(obj, fun)
             % Sets a different fitness function.
             assert(isa(fun, 'FitnessFunction'), "error: unknown FitnessFunction")

@@ -26,20 +26,13 @@ for m = 1:length(measures)
         yyaxis left
         plot(logTimes, pop.StatsLog.Avg(:, pop.find(measures{m})), '-k')
         ylabel(measures{m})
-        
-        % % get info about some cases where emergence results are complex
-        % indices = [pop.find('psi'), pop.find('vmi'), pop.find('xmi')];
-        % if ~isreal(pop.StatsLog.Avg(:, indices))
-        %     disp(strcat("avg: population number ", num2str(p)))
-        %     disp(pop.StatsLog.Avg(end, :))
-        % end
 
         % psi on the right axis
         yyaxis right
         plot(logTimes, pop.StatsLog.Avg(:, pop.find('psi')), '-r')
         ylabel('psi')
     end
-    title(strcat("selection: ", pop.SelectionCriterion))
+    title(strcat("selection: ", pop.getSelectionCriterion()))
     xlabel('generation')
     grid on
     hold off
@@ -63,7 +56,7 @@ for p = 1:numPops
     plot(logTimes, pop.StatsLog.Avg(:, pop.find('vmi')), '-r')
     ylabel('Vmi')
 end
-title(strcat("selection: ", pop.SelectionCriterion))
+title(strcat("selection: ", pop.getSelectionCriterion()))
 xlabel('generation')
 grid on
 hold off
@@ -89,7 +82,7 @@ for m = 1:length(measures)
     end
     ylabel(measures{m})
     xlabel('psi')
-    title(strcat("selection: ", pop.SelectionCriterion))
+    title(strcat("selection: ", pop.getSelectionCriterion()))
     grid on
     hold off
     stats.fdr.(measures{m}) = fdr(stats.(measures{m}).pval);
@@ -115,7 +108,7 @@ for m = 1:length(measures)
         ylim([max(-1, minVal-0.1) min(1, maxVal+0.1)])
         % ylim([-1 1])
     end
-    title(strcat("selection: ", pop.SelectionCriterion))
+    title(strcat("selection: ", pop.getSelectionCriterion()))
 end
 
 if nargout<1
