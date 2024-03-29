@@ -24,13 +24,10 @@ for ct = 1:length(Ctypes)
     for env = 1:length(Envs)
         for crit = 1:length(Criteria)
             if ~isempty(populations.(Ctypes{ct}).(Envs{env}).(Criteria{crit}))
-                % generate gene distribution plots and get fittest genotype
-                genotype = plotGenes(populations.(Ctypes{ct}).(Envs{env}).(Criteria{crit}));
-                Genotypes.(Ctypes{ct}).(Envs{env}).(Criteria{crit}) = genotype;
-    
-                % save the gene distribution plots only for Lorenz populations
-                if ~strcmp(Envs{env}, 'Lorenz')
-                    close all
+
+                % generate gene distribution plots for Lorenz environment
+                if strcmp(Envs{env}, 'Lorenz')
+                    plotGenes(populations.(Ctypes{ct}).(Envs{env}).(Criteria{crit}));
                 end
     
                 % plot fitness trajectories
@@ -52,11 +49,5 @@ for ct = 1:length(Ctypes)
         end
     end
 end
-
-%% save optimized genotypes
-% save it into Reservoir class module directory
-cd(fullfile(paths.main, 'classes'))
-save("Genotypes.mat", "Genotypes")
-cd(paths.main)
 
 end
