@@ -13,46 +13,108 @@ analysisName = 'analysis01D';
 % load results
 [results, environments, numEnvs] = loadResults();
 
+% remove environment E because it has too few valid observations
+% invalid if P(S)=0 or P(E)=0
+environments = environments(~strcmp(environments, 'SprottE'));
+numEnvs = length(environments);
+
 %% compute probabilities
 
-% calculate conditional probabilities and plotting data (P(S|E)-P(S))
+% calculate conditional probabilities
 numRows = size(results,1);
 boxData = struct();
 ignore = ~true(numRows, numEnvs); % ignore reservoirs with P(E)==0 or P(S)==0
+probability_names = {'P(S|E)-P(S)', 'P(S|E)', 'P(E|S)', 'P(S)'}; % probabilities to plot
+
 for env = 1:numEnvs
+    % get name of environment
     thisEnv = environments{env};
-    % identify inconclusive observations
+
+    % identify inconclusive observations (to be ignored)
     ignore(:,env) = or(results.(['pe',thisEnv])==0, results.(['ps',thisEnv])==0);
+
+    % create table for storing results
+    tbl = table('Size', [sum(~ignore(:, env)), length(probability_names)], ...
+                'VariableTypes', repmat({'double'}, [1 length(probability_names)]), ...
+                'VariableNames', probability_names);
+
     % calculate P(S|E) = P(S,E)/P(E)
-    conditional = results.(['pse',thisEnv])(~ignore(:,env))./results.(['pe',thisEnv])(~ignore(:,env));
-    % concatenate [P(S|E), P(S), P(S|E)-P(S)]
-    boxData.(thisEnv) = [conditional, results.(['ps',thisEnv])(~ignore(:,env)), conditional-results.(['ps',thisEnv])(~ignore(:,env))];
+    ps_given_e = results.(['pse',thisEnv])(~ignore(:,env))./results.(['pe',thisEnv])(~ignore(:,env));
+
+    % calculate P(E|S) = P(S,E)/P(S)
+    pe_given_s = results.(['pse',thisEnv])(~ignore(:,env))./results.(['ps',thisEnv])(~ignore(:,env));
+
+    % get P(S)
+    ps = results.(['ps',thisEnv])(~ignore(:,env));
+
+    % store results in table
+    tbl.("P(S|E)-P(S)") = ps_given_e - ps;
+    tbl.("P(S|E)") = ps_given_e;
+    tbl.("P(E|S)") = pe_given_s;
+    tbl.("P(S)") = ps;
+    boxData.(thisEnv) = tbl;
+
 end
 
 %% statistical tests
 
 % save results from statistical tests
+catNames = {'environment', 'randomVariable'};
 statsNames = {'tstat', 'hedgesg', 'df', 'sd', 'mean', 'pVal', 'fdr'};
 numStats = length(statsNames);
-stats = table('Size', [numEnvs, numStats], ...
-              'VariableTypes', repmat({'double'}, [1 numStats]), ...
-              'VariableNames', statsNames);
+stats = table('Size', [numEnvs*(length(probability_names)-1), numStats+length(catNames)], ...
+              'VariableTypes', [repmat({'categorical'}, [1 length(catNames)]), repmat({'double'}, [1 numStats])], ...
+              'VariableNames', [catNames(:)', statsNames(:)']);
 
+row = 1;
 for env = 1:numEnvs
     % extract environment name
-    thisEnv = environments{env};
-
+    thisEnv = environments{env};    
+    
+    % TEST 01: P(S|E) - P(S)
     % dependent permutation test to check if P(S|E) differs from P(S)
-    s = mes(boxData.(thisEnv)(:, 1), boxData.(thisEnv)(:, 2), 'hedgesg', 'isDep', 1, 'nBoot', 10000);
+    s = mes(boxData.(thisEnv).("P(S|E)"), boxData.(thisEnv).("P(S)"), 'hedgesg', 'isDep', 1, 'nBoot', 10000);
     
     % save stats
-    stats.Properties.RowNames{env} = thisEnv;
-    stats.hedgesg(env) = s.hedgesg;
-    stats.tstat(env) = s.t.tstat;
-    stats.df(env) = s.t.df;
-    stats.pVal(env) = s.t.p;
-    stats.mean(env) = mean(boxData.(thisEnv)(:,3));
-    stats.sd(env) = std(boxData.(thisEnv)(:,3));
+    stats.environment(row) = thisEnv;
+    stats.randomVariable(row) = "P(S|E)-P(S)";
+    stats.hedgesg(row) = s.hedgesg;
+    stats.tstat(row) = s.t.tstat;
+    stats.df(row) = s.t.df;
+    stats.pVal(row) = s.t.p;
+    stats.mean(row) = mean(boxData.(thisEnv).("P(S|E)-P(S)"));
+    stats.sd(row) = std(boxData.(thisEnv).("P(S|E)-P(S)"));
+    row = row+1;
+
+    % TEST 02: P(S|E)
+    % one-sample t-test to see if P(S|E) has a different mean than 0.5
+    [~, p, ~, s] = ttest(boxData.(thisEnv).("P(S|E)"), 0.5);
+
+    % save stats
+    stats.environment(row) = thisEnv;
+    stats.randomVariable(row) = "P(S|E)";
+    stats.hedgesg(row) = nan;
+    stats.tstat(row) = s.tstat;
+    stats.df(row) = s.df;
+    stats.sd(row) = s.sd;
+    stats.pVal(row) = p;
+    stats.mean(row) = mean(boxData.(thisEnv).("P(S|E)"));
+    row = row+1;
+
+    % TEST 03: P(E|S)
+    % one-sample t-test to see if P(S|E) has a different mean than 0.5
+    [~, p, ~, s] = ttest(boxData.(thisEnv).("P(E|S)"), 0.5);
+
+    % save stats
+    stats.environment(row) = thisEnv;
+    stats.randomVariable(row) = "P(E|S)";
+    stats.hedgesg(row) = nan;
+    stats.tstat(row) = s.tstat;
+    stats.df(row) = s.df;
+    stats.sd(row) = s.sd;
+    stats.pVal(row) = p;
+    stats.mean(row) = mean(boxData.(thisEnv).("P(E|S)"));
+    row = row+1;
 end
 
 % correct for multiple comparisons
@@ -72,29 +134,13 @@ end
 %% plotting
 % boxplots with P(S|E)-P(S)
 
-% separate boxplot for each environment
-for env = 1:numEnvs
-    plotting(environments(env), ignore(:,env))
-    % save and close plots
+% boxplot with all environments
+for pn = 1:length(probability_names)-1
+    plotting(environments, ignore, probability_names{pn})
     if saveFigures
-        savefigs(fullfile(paths.figures, analysisName), environments{env}, true)
+        savefigs(fullfile(paths.figures, analysisName), probability_names{pn}, true)
         close all
     end
-end
-
-% boxplot with all environments
-plotting(environments, ignore)
-if saveFigures
-    savefigs(fullfile(paths.figures, analysisName), 'allEnvs', true)
-    close all
-end
-
-% boxplot with Sprott only
-sprott = find(~cellfun(@isempty, regexp(environments, 'Sprott')));
-plotting(environments(sprott), ignore(:, sprott));
-if saveFigures
-    savefigs(fullfile(paths.figures, analysisName), 'allSprotts', true)
-    close all
 end
 
 %% anonymous functions
@@ -135,7 +181,7 @@ end
         results.Properties.VariableNames = r.Properties.VariableNames;
     end
     
-    function [] = plotting(environments, ignore)
+    function [] = plotting(environments, ignore, probName)
         % Produces a boxplot with mutliple environments.
         % assign some variables
         thisNumEnvs = length(environments);
@@ -150,8 +196,8 @@ end
             thisEnv = environments{i};
         
             % get data to plot
-            stop = start+length(boxData.(thisEnv)(:,3))-1;
-            y(start:stop) = boxData.(thisEnv)(:,3);
+            stop = start+length(boxData.(thisEnv).(probName))-1;
+            y(start:stop) = boxData.(thisEnv).(probName);
             x(start:stop) = i;
             
             % update start point
@@ -164,22 +210,19 @@ end
                  'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
                  'LineWidth', 1, 'MarkerStyle', 'none');
         hold on
-        % swarmchart(x, y, ...
-        %            7, 'MarkerFaceColor', [1 0 0], ...
-        %            'MarkerFaceAlpha', 0.5, 'MarkerEdgeColor', 'none')
         yline(0, 'LineWidth', 1, 'LineStyle', '--', 'Color', [1 1 1]*0.6)
         hold off
-        ylabel('P(S|E)-P(S)')
+        ylabel(probName)
         set(gca, 'XTick', 1:thisNumEnvs, 'XTickLabel', environments)
         
-        % add astertisks
-        maxVal = max(y)+0.1;
-        ylim([min(y)-0.05 maxVal])
-        for i = 1:thisNumEnvs
-            asterisk = get_asterisk(stats.fdr(i));
-            label = text(i, maxVal-0.05, asterisk, 'Fontsize', 12);
-            set(label,'HorizontalAlignment','center','VerticalAlignment','middle');
-        end
+        % % add astertisks
+        % maxVal = max(y)+0.1;
+        % ylim([min(y)-0.05 maxVal])
+        % for i = 1:thisNumEnvs
+        %     asterisk = get_asterisk(stats.fdr(i));
+        %     label = text(i, maxVal-0.05, asterisk, 'Fontsize', 12);
+        %     set(label,'HorizontalAlignment','center','VerticalAlignment','middle');
+        % end
     end
 
 end
