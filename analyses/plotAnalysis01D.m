@@ -11,7 +11,7 @@ paths = addPaths();
 analysisName = 'analysis01D';
 
 % load results
-[results, environments, numEnvs] = loadResults();
+[results, environments] = loadResults();
 
 % remove environment E because it has too few valid observations
 % invalid if P(S)=0 or P(E)=0
@@ -32,6 +32,8 @@ for env = 1:numEnvs
 
     % identify inconclusive observations (to be ignored)
     ignore(:,env) = or(results.(['pe',thisEnv])==0, results.(['ps',thisEnv])==0);
+
+    disp(strcat(thisEnv, " number of valid observations: ", num2str(sum(~ignore(:,env)))))
 
     % create table for storing results
     tbl = table('Size', [sum(~ignore(:, env)), length(probability_names)], ...
@@ -58,70 +60,75 @@ end
 
 %% statistical tests
 
-% save results from statistical tests
-catNames = {'environment', 'randomVariable'};
-statsNames = {'tstat', 'hedgesg', 'df', 'sd', 'mean', 'pVal', 'fdr'};
-numStats = length(statsNames);
-stats = table('Size', [numEnvs*(length(probability_names)-1), numStats+length(catNames)], ...
-              'VariableTypes', [repmat({'categorical'}, [1 length(catNames)]), repmat({'double'}, [1 numStats])], ...
-              'VariableNames', [catNames(:)', statsNames(:)']);
-
-row = 1;
-for env = 1:numEnvs
-    % extract environment name
-    thisEnv = environments{env};    
-    
-    % TEST 01: P(S|E) - P(S)
-    % dependent permutation test to check if P(S|E) differs from P(S)
-    s = mes(boxData.(thisEnv).("P(S|E)"), boxData.(thisEnv).("P(S)"), 'hedgesg', 'isDep', 1, 'nBoot', 10000);
-    
-    % save stats
-    stats.environment(row) = thisEnv;
-    stats.randomVariable(row) = "P(S|E)-P(S)";
-    stats.hedgesg(row) = s.hedgesg;
-    stats.tstat(row) = s.t.tstat;
-    stats.df(row) = s.t.df;
-    stats.pVal(row) = s.t.p;
-    stats.mean(row) = mean(boxData.(thisEnv).("P(S|E)-P(S)"));
-    stats.sd(row) = std(boxData.(thisEnv).("P(S|E)-P(S)"));
-    row = row+1;
-
-    % TEST 02: P(S|E)
-    % one-sample t-test to see if P(S|E) has a different mean than 0.5
-    [~, p, ~, s] = ttest(boxData.(thisEnv).("P(S|E)"), 0.5);
-
-    % save stats
-    stats.environment(row) = thisEnv;
-    stats.randomVariable(row) = "P(S|E)";
-    stats.hedgesg(row) = nan;
-    stats.tstat(row) = s.tstat;
-    stats.df(row) = s.df;
-    stats.sd(row) = s.sd;
-    stats.pVal(row) = p;
-    stats.mean(row) = mean(boxData.(thisEnv).("P(S|E)"));
-    row = row+1;
-
-    % TEST 03: P(E|S)
-    % one-sample t-test to see if P(S|E) has a different mean than 0.5
-    [~, p, ~, s] = ttest(boxData.(thisEnv).("P(E|S)"), 0.5);
-
-    % save stats
-    stats.environment(row) = thisEnv;
-    stats.randomVariable(row) = "P(E|S)";
-    stats.hedgesg(row) = nan;
-    stats.tstat(row) = s.tstat;
-    stats.df(row) = s.df;
-    stats.sd(row) = s.sd;
-    stats.pVal(row) = p;
-    stats.mean(row) = mean(boxData.(thisEnv).("P(E|S)"));
-    row = row+1;
-end
-
-% correct for multiple comparisons
-stats.fdr = fdr(stats.pVal);
-
-% save statistics
 if saveFigures
+
+    % save results from statistical tests
+    catNames = {'environment', 'randomVariable'};
+    statsNames = {'tstat', 'hedgesg', 'df', 'sd', 'mean', 'median', 'pVal', 'fdr'};
+    numStats = length(statsNames);
+    stats = table('Size', [numEnvs*(length(probability_names)-1), numStats+length(catNames)], ...
+                  'VariableTypes', [repmat({'categorical'}, [1 length(catNames)]), repmat({'double'}, [1 numStats])], ...
+                  'VariableNames', [catNames(:)', statsNames(:)']);
+    
+    row = 1;
+    for env = 1:numEnvs
+        % extract environment name
+        thisEnv = environments{env};    
+        
+        % TEST 01: P(S|E) - P(S)
+        % dependent permutation test to check if P(S|E) differs from P(S)
+        s = mes(boxData.(thisEnv).("P(S|E)"), boxData.(thisEnv).("P(S)"), 'hedgesg', 'isDep', 1, 'nBoot', 10000);
+        
+        % save stats
+        stats.environment(row) = thisEnv;
+        stats.randomVariable(row) = "P(S|E)-P(S)";
+        stats.hedgesg(row) = s.hedgesg;
+        stats.tstat(row) = s.t.tstat;
+        stats.df(row) = s.t.df;
+        stats.pVal(row) = s.t.p;
+        stats.mean(row) = mean(boxData.(thisEnv).("P(S|E)-P(S)"));
+        stats.median(row) = median(boxData.(thisEnv).("P(S|E)-P(S)"));
+        stats.sd(row) = std(boxData.(thisEnv).("P(S|E)-P(S)"));
+        row = row+1;
+    
+        % TEST 02: P(S|E)
+        % one-sample t-test to see if P(S|E) has a different mean than 0.5
+        [~, p, ~, s] = ttest(boxData.(thisEnv).("P(S|E)"), 0.5);
+    
+        % save stats
+        stats.environment(row) = thisEnv;
+        stats.randomVariable(row) = "P(S|E)";
+        stats.hedgesg(row) = nan;
+        stats.tstat(row) = s.tstat;
+        stats.df(row) = s.df;
+        stats.sd(row) = s.sd;
+        stats.pVal(row) = p;
+        stats.mean(row) = mean(boxData.(thisEnv).("P(S|E)"));
+        stats.median(row) = median(boxData.(thisEnv).("P(S|E)"));
+        row = row+1;
+    
+        % TEST 03: P(E|S)
+        % one-sample t-test to see if P(S|E) has a different mean than 0.5
+        [~, p, ~, s] = ttest(boxData.(thisEnv).("P(E|S)"), 0.5);
+    
+        % save stats
+        stats.environment(row) = thisEnv;
+        stats.randomVariable(row) = "P(E|S)";
+        stats.hedgesg(row) = nan;
+        stats.tstat(row) = s.tstat;
+        stats.df(row) = s.df;
+        stats.sd(row) = s.sd;
+        stats.pVal(row) = p;
+        stats.mean(row) = mean(boxData.(thisEnv).("P(E|S)"));
+        stats.median(row) = median(boxData.(thisEnv).("P(E|S)"));
+        row = row+1;
+        
+    end
+    
+    % correct for multiple comparisons
+    stats.fdr = fdr(stats.pVal);
+
+    % save statistics
     cd(paths.figures)
     if ~exist(analysisName, 'dir')
         mkdir(analysisName)
@@ -145,7 +152,7 @@ end
 
 %% anonymous functions
     
-    function [results, environments, numEnvs] = loadResults()
+    function [results, environments] = loadResults()
         % Loads results and config/ environments of analysis02B.
         % get names of all files in analysis directory
         files = dir(fullfile(paths.outputs, analysisName, "*.mat"));
