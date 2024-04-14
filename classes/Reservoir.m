@@ -343,10 +343,10 @@ classdef Reservoir
 
             % % plot 2: neuronal activities during spinup, drive and forecast
             % figure;
-            % plot(1:T, [Rtrain, Rforecast])
+            % plot(obj.Spinup+1:T, [Rtrain(:, obj.Spinup+1:end), Rforecast])
             % set(gca, 'ColorOrder', gray(round(2*obj.N)))
             % % vertical lines to indicate spinup, training, forecast, t*
-            % xline(obj.Spinup, '-k', 'LineWidth', 1)
+            % % xline(obj.Spinup, '-k', 'LineWidth', 1)
             % xline(obj.Spinup+Ttrain, '-k', 'LineWidth', 1)
             % % xline(obj.Spinup+Ttrain+tstar, '--r', 'LineWidth', 1)
             % title(strcat("loss=", num2str(results(obj.find('loss'))), ...
@@ -407,10 +407,10 @@ classdef Reservoir
 
             % % plot 2: neuronal activities during spinup and forecast
             % figure;
-            % plot(1:T, R)
+            % plot(obj.Spinup+1:T, R(:, obj.Spinup+1:end))
             % set(gca, 'ColorOrder', gray(round(2*obj.N)))
             % % vertical lines to indicate spinup, training, forecast, t*
-            % xline(obj.Spinup, '-k', 'LineWidth', 1)
+            % % xline(obj.Spinup, '-k', 'LineWidth', 1)
             % % xline(obj.Spinup+tstar, '--r', 'LineWidth', 1)
             % title(strcat("loss=", num2str(results(obj.find('loss'))), ...
             %              "; psi=", num2str(results(obj.find('psi'))), ...
