@@ -190,8 +190,15 @@ end
     
     function [] = plotting(environments, ignore, probName)
         % Produces a boxplot with mutliple environments.
-        % assign some variables
+        % get number of environments to plot
         thisNumEnvs = length(environments);
+
+        % sort environments according to P(S) (how feasible is the task)
+        feasibility = zeros(1, thisNumEnvs);
+        for i = 1:thisNumEnvs
+            feasibility(i) = mean(boxData.(environments{i}).("P(S)"));
+        end
+        [~, feasibility_index] = sort(feasibility, 'descend');
     
         % one plot with all environments
         y = zeros(sum(~ignore(:)),1);
@@ -200,7 +207,8 @@ end
         % aggregate data from all environments
         start = 1; 
         for i = 1:thisNumEnvs
-            thisEnv = environments{i};
+            thisEnv = environments{feasibility_index(i)};
+            disp(thisEnv)
         
             % get data to plot
             stop = start+length(boxData.(thisEnv).(probName))-1;
@@ -220,7 +228,7 @@ end
         yline(0, 'LineWidth', 1, 'LineStyle', '--', 'Color', [1 1 1]*0.6)
         hold off
         ylabel(probName)
-        set(gca, 'XTick', 1:thisNumEnvs, 'XTickLabel', environments)
+        set(gca, 'XTick', 1:thisNumEnvs, 'XTickLabel', environments(feasibility_index))
         
         % % add astertisks
         % maxVal = max(y)+0.1;
