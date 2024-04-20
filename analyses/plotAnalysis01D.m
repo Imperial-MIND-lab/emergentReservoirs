@@ -160,7 +160,7 @@ if saveFigures
     cd(paths.main)
 end
 
-%% statistical testing 2
+%% Task difficulty
 % Test for group differences in P(S) between environments
 
 if saveFigures
@@ -237,6 +237,20 @@ boxchart(successProps.environment, successProps.success, ...
          'LineWidth', 1, 'MarkerStyle', 'none');
 ylabel('P(S) all')
 
+% histograms
+figure();
+hold on
+for env = 1:numEnvs
+    thisEnv = environments{env};
+    h = histogram(boxData.(thisEnv).("P(S)"), 'BinWidth', 0.02);
+    h(1).FaceAlpha = 0.2;
+    %xline(mean(boxData.(thisEnv).("P(S)")), 'Color', 'r', 'HandleVisibility','off');
+end
+legend(environments)
+xlabel('P(S)')
+ylabel('count')
+
+% save figures
 if saveFigures
     savefigs(fullfile(paths.figures, analysisName), 'success_probabilities', true)
     close all
