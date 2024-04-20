@@ -23,3 +23,6 @@ external/ReconcilingEmergences/**
 
 # plotting function that was written by Andrea Luppi
 functions/plotting/scatter_corr.m
+
+# manuscript folder
+/paper
