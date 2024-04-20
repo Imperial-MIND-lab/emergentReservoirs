@@ -50,4 +50,66 @@ for ct = 1:length(Ctypes)
     end
 end
 
+%% supplementary fig: plots that summarise non-Lorenz environments
+
+% plots for human and random reservoirs
+for ct = 1:length(Ctypes)
+
+    % get all environments
+    environments = fieldnames(populations.(Ctypes{ct}));
+    % exclude failed environment (poor performance even after optimization)
+    environments = environments(~strcmp(environments, 'SprottE'));
+
+    % get colours
+    colours = parula(length(environments));
+
+    % Lorenz results of bio-inspired reservoirs is in the main results
+    if strcmp(Ctypes{ct}, 'human')
+        environments = environments(~strcmp(environments, 'Lorenz'));
+    end
+    
+    % one plot per each optimization criterion (psi and loss)
+    for crit = 1:length(Criteria)
+
+        figure();
+        hold on
+        for env = 1:length(environments)
+
+            % get mean loss trajectory
+            [loss_mu, loss_sem, generations] = getAvgFitness(populations.(Ctypes{ct}).(environments{env}).(Criteria{crit}), 'loss');
+            % get mean psi trajectory
+            [psi_mu, psi_sem] = getAvgFitness(populations.(Ctypes{ct}).(environments{env}).(Criteria{crit}), 'psi');
+
+            % plot loss onto the left y-axis
+            yyaxis left
+            plot(generations, loss_mu, 'Color', colours(env,:), 'LineStyle', '-', 'Marker', 'none');
+            ylabel('loss')
+            error_patch(generations, loss_mu, loss_sem, colours(env,:), 'FaceAlpha', 0.2, 'EdgeColor', 'none', 'HandleVisibility','off');
+        
+            % plot psi onto the right y-axis
+            yyaxis right
+            plot(generations, psi_mu, 'Color', colours(env,:), 'LineStyle', ':', 'Marker', 'none', 'HandleVisibility','off');
+            ylabel('psi')
+            error_patch(generations, psi_mu, psi_sem, colours(env,:), 'FaceAlpha', 0.2, 'EdgeColor', 'none', 'HandleVisibility','off');
+            
+        end
+
+        % add figure labels
+        xlabel('generation')
+        title(strcat(Ctypes{ct}, "; selection criterion = ", Criteria{crit}))
+        hold off
+        lgd = legend(environments, 'Location', 'southoutside');
+        lgd.NumColumns = length(environments);
+
+    end
+
+end
+
+% save plots
+if saveFigures
+    figname = [analysisName, '_avgFitnessTrajectories'];
+    savefigs(fullfile(paths.figures, analysisName), figname, true)
+    close all
+end
+
 end
