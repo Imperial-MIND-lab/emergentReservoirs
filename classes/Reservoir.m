@@ -337,7 +337,7 @@ classdef Reservoir
                 ylabel(strcat("x",num2str(d)))
                 grid on
             end
-            title(tcl, strcat("loss=", num2str(results(obj.find('loss'))), ...
+            title(tcl, strcat(obj.Env, ": loss=", num2str(results(obj.find('loss'))), ...
                          "; psi=", num2str(results(obj.find('psi'))), ...
                          "; t*=", num2str(results(obj.find('tstar')))))
 
@@ -363,7 +363,7 @@ classdef Reservoir
             % generate inputs if not given
             if nargin<2
                 Ttrain = 2000;
-                Ttest = 500;
+                Ttest = 1000;
                 utrain = generateInput(obj.Spinup+Ttrain, 1, obj.Env);
                 utest = generateInput(obj.Spinup+Ttest, 1, obj.Env);
             end
@@ -401,7 +401,7 @@ classdef Reservoir
                 ylabel(strcat("x",num2str(d)))
                 grid on
             end
-            title(tcl, strcat("loss=", num2str(results(obj.find('loss'))), ...
+            title(tcl, strcat(obj.Env, ": loss=", num2str(results(obj.find('loss'))), ...
                          "; psi=", num2str(results(obj.find('psi'))), ...
                          "; t*=", num2str(results(obj.find('tstar')))))
 
