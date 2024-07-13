@@ -127,48 +127,6 @@ switch analysisName
                                    'SprottK', 'SprottR'};
         end
 
-% Analysis02A configurations ------------------------------------------- %
-    case 'analysis02A'
-
-        if testRun
-            config.C = sc;
-            config.environments = {'SprottA', 'SprottB', 'SprottE'};
-            config.repetitions = 10;
-            config.trainTime = 2000;
-            config.testTime = 300;
-            config.Spinup = 500;
-            config.outcomeMeasures = {'loss', 'psi'};
-        else
-            config.C = sc;
-            config.environments = {'SprottA', 'SprottB', ...
-                                   'SprottE', 'SprottG', ...
-                                   'SprottK', 'SprottR'};
-            config.repetitions = 100;
-            config.trainTime = 2000;
-            config.testTime = 1000;
-            config.Spinup = 500;
-            config.outcomeMeasures = {'loss', 'psi', 'vmi', 'xmi'};
-        end
-
-% Analysis02B configurations -------------------------------------------- %
-    case 'analysis02B'
-
-        if testRun
-            T = struct('spinup', 500, ...            
-                       'train', 2000, ...
-                       'test', 1000);
-            config.populationProperties = {'C', sc, 'Size', 100, 'nTest', 1, 'T', T};
-            config.environments = {'SprottA', 'SprottB', 'SprottE'};
-        else
-            T = struct('spinup', 500, ...            
-                       'train', 2000, ...
-                       'test', 1000);
-            config.populationProperties = {'C', sc, 'Size', 1000, 'nTest', 100, 'T', T};
-            config.environments = {'SprottA', 'SprottB', ...
-                                   'SprottE', 'SprottG', ...
-                                   'SprottK', 'SprottR'};
-        end
-
 % Analysis02G1 configurations -------------------------------------------- %
     case 'analysis02G1'
 
