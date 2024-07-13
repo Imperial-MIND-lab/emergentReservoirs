@@ -95,35 +95,6 @@ switch analysisName
         % define output file name
         filename = [analysisName, '_', num2str(jobID), '.mat'];
 
-    case 'analysis02A'
-    % analysis 02A:
-    % Generalisability of loss- versus psi-optimised reservoirs.
-    % (run as single job, i.e. jobID = 1)
-    
-        % run analysis
-        tic
-        results = analysis02A(config);
-        toc
-        
-        % define output file name
-        filename = [analysisName, '_', num2str(jobID), '.mat'];
-
-    case 'analysis02B'
-    % analysis 02B
-    % Further checks of loss-psi relationship in the context of generalisability
-    % (run with jobIDs 1-10)
-    
-        % set seed according to jobID
-        config.seed = jobID;
-    
-        % run analysis
-        tic
-        results = analysis02B(config);
-        toc
-       
-        % define output file name
-        filename = [analysisName, '_', num2str(jobID), '.mat'];
-
     case 'analysis02G1'
     % analysis 02G: Generalisability analysis part 1 - evolving populations 
     % for both prediction performance and emergence. 
