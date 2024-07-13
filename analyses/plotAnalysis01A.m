@@ -64,8 +64,10 @@ for ct = 1:length(Ctypes)
     colours = parula(length(environments));
 
     % Lorenz results of bio-inspired reservoirs is in the main results
-    if strcmp(Ctypes{ct}, 'human')
-        environments = environments(~strcmp(environments, 'Lorenz'));
+    environments = environments(~strcmp(environments, 'Lorenz'));
+    if strcmp(Ctypes{ct}, 'random')
+        % add it to the end in order to keep the colour order consistent
+        environments = [environments(:)', 'Lorenz']; 
     end
     
     % one plot per each optimization criterion (psi and loss)
