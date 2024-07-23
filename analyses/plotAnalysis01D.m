@@ -275,35 +275,27 @@ end
         % get names of all files in analysis directory
         files = dir(fullfile(paths.outputs, analysisName, "*.mat"));
     
-        % load configs of all analyses to infer total number of observations (rows)
+        % load configs and results of file 1
+        results = load(fullfile(paths.outputs, analysisName, files(1).name)).results;
         config = load(fullfile(paths.outputs, analysisName, files(1).name)).config;
         environments = config.environments; 
-        populationProperties = struct(config.populationProperties{:});
-        numRows = populationProperties.Size; numEnvs = length(environments);
-        if length(files)>1
+        
+        % get column names of results table
+        varNames = results.Properties.VariableNames;
+
+        % load results from other runs (if there is more than 1 file)
+        if length(files)>2
             for file = 2:length(files)
-                config = load(fullfile(paths.outputs, analysisName, files(file).name)).config;
-                % only aggregate results with the same columns (environments)
-                if length(config.environments)==numEnvs && all(strcmp(environments, config.environments))
-                    populationProperties = struct(config.populationProperties{:});
-                    numRows = numRows + populationProperties.Size;
-                end
+                % load more results
+                r = load(fullfile(paths.outputs, analysisName, files(file).name)).results;
+
+                % make sure column ordering of r is the same as results
+                r = r(:, varNames);
+
+                % concatenate results
+                results = [results; r];
             end
         end
-        
-        % pre-allocate variable for aggregating results of all jobs
-        results = table('Size', [numRows, 4*numEnvs], ...
-                        'VariableTypes', repmat({'double'}, [1 4*numEnvs]));
-        
-        % load results of all jobs and aggregate
-        row = 1;
-        for file = 1:length(files)
-            r = load(fullfile(paths.outputs, analysisName, files(file).name)).results;
-            numRows = size(r,1);
-            results(row:row+numRows-1,:) = r;
-            row = row+numRows;
-        end
-        results.Properties.VariableNames = r.Properties.VariableNames;
     end
     
     function [] = plotting(environments, ignore, probName)
