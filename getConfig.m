@@ -51,7 +51,7 @@ switch analysisName
 
         % create array with environment names
         Env = {'Lorenz', 'SprottA', 'SprottB', ...
-               'SprottE', 'SprottG', 'SprottK', 'SprottR'};
+               'SprottG', 'SprottK', 'SprottR'};
         Env = repmat(Env', [config.PopsPerEnv 1]);
 
         % create a grid with all parameter combinations
@@ -76,13 +76,13 @@ switch analysisName
             config.environment = 'Lorenz';
             config.reservoirProperties = {'C', sc, 'Env', config.environment};
             config.nTest = 10;
-            config.nTrain = 3;
+            config.nTrain = 10;
             config.testTime = 1000;
             config.trainTimes = 10:50:2000;
         else
             config.environment = 'Lorenz';
             config.reservoirProperties = {'C', sc, 'Env', config.environment};
-            config.nTest = 100;
+            config.nTest = 10;
             config.nTrain = 100;
             config.testTime = 1000;
             config.trainTimes = 10:20:2000;
@@ -94,7 +94,7 @@ switch analysisName
         if testRun
             config.reservoirProperties = {'C', sc, 'Env', 'Lorenz'};
             config.optimisedFor = {'loss', 'psi'};
-            config.nTest = 2;
+            config.nTest = 25;
             config.trainTime = 2000;
             config.testTime = 1000;
             config.numRandomizations = 1;
@@ -121,10 +121,8 @@ switch analysisName
                        'train', 2000, ...
                        'test', 1000);
             config.populationProperties = {'C', sc, 'Size', 1000, 'nTest', 100, 'T', T};
-            config.environments = {'Lorenz', ...
-                                   'SprottA', 'SprottB', ...
-                                   'SprottE', 'SprottG', ...
-                                   'SprottK', 'SprottR'};
+            config.environments = {'Lorenz', 'SprottA', 'SprottB', ...
+                                   'SprottG', 'SprottK', 'SprottR'};
         end
 
 % Analysis02G1 configurations -------------------------------------------- %
@@ -138,7 +136,7 @@ switch analysisName
             LogFreq = {10};
             Size = {3};
             nTest = {3};
-            alpha = 0:0.5:1;
+            alpha = [0, 1];
         else
             % number of populations (repetitions) per environment
             config.PopsPerEnv = 10;
@@ -192,9 +190,9 @@ switch analysisName
             config.T = struct('spinup', 500, ...            
                               'train', 2000, ...
                               'test', 1000);
-            config.nTest = 1;
+            config.nTest = 100;
             config.resultNames = {'ps', 'pe'};
-            config.environments = {'Lorenz', 'SprottA', 'SprottB', 'SprottR'};
+            config.environments = {'Lorenz'};
         else
             config.T = struct('spinup', 500, ...            
                               'train', 2000, ...
@@ -202,7 +200,7 @@ switch analysisName
             config.nTest = 100;
             config.resultNames = {'loss', 'psi', 'vmi', 'xmi', 'ps', 'pe', 'pse'};
             config.environments = {'Lorenz', 'SprottA', 'SprottB', ...
-                                   'SprottE', 'SprottG', 'SprottK', 'SprottR'};
+                                   'SprottG', 'SprottK', 'SprottR'};
         end
 
 % default output is structural connectivity ----------------------------- %

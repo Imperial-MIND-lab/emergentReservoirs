@@ -24,7 +24,7 @@ switch analysisName
     % analysis 01A: evolving populations
     % Relationship between emergence and prediction performance across
     % predictions tasks and in neuromorphic and random reservoirs.
-    % (run with JobIDs 1-140)
+    % (run with JobIDs 1-120)
         
         % extract configs for this job
         config.populationProperties = table2struct(config.populationProperties(jobID, :));
@@ -52,6 +52,7 @@ switch analysisName
     case 'analysis01B'
     % analysis 01B:
     % Loss and psi are also linked when varying training time only.
+    % (run with single JobID 1)
 
     % run analysis
     tic
@@ -82,7 +83,7 @@ switch analysisName
     case 'analysis01D'
     % analysis 01D
     % Test the hypothesis: P(success|emergence)>P(success)
-    % (run with jobIDs 1-10)
+    % (run with jobIDs 1-4)
     
         % set seed according to jobID
         config.seed = jobID;
