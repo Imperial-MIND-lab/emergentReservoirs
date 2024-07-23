@@ -48,12 +48,20 @@ for file = 1:length(files)
             human = [human; ~true(length(yRandom),1)];
 
             % test for group differences
-            s = mes(yHuman, yRandom, 'hedgesg', 'isDep', 1, 'nBoot', 10000);
-            stats.environment(env) = thisEnv;
-            stats.hedgesg(env) = s.hedgesg;
-            stats.tstat(env) = s.t.tstat;
-            stats.pVal(env) = s.t.p;
-            stats.df(env) = s.t.df;
+            if length(yHuman)>1 && length(yRandom)==length(yHuman)
+                s = mes(yHuman, yRandom, 'hedgesg', 'isDep', 1, 'nBoot', 10000);
+                stats.environment(env) = thisEnv;
+                stats.hedgesg(env) = s.hedgesg;
+                stats.tstat(env) = s.t.tstat;
+                stats.pVal(env) = s.t.p;
+                stats.df(env) = s.t.df;
+            else
+                stats.environment(env) = thisEnv;
+                stats.hedgesg(env) = nan;
+                stats.tstat(env) = nan;
+                stats.pVal(env) = nan;
+                stats.df(env) = nan;
+            end
         end
         human = human==1;
         stats.fdr = fdr(stats.pVal(:));
