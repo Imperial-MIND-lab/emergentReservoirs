@@ -86,7 +86,7 @@ switch analysisName
     % (run with jobIDs 1-4)
     
         % set seed according to jobID
-        config.seed = jobID;
+        config.seed = config.seeds(jobID);
     
         % run analysis
         tic
