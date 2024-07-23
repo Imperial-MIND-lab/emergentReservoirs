@@ -46,7 +46,7 @@ for env = 1:numEnvs
     population = population.evaluate(1:population.Size);
 
     % fetch results
-    for m = 2:numMetrics
+    for m = 1:numMetrics
         results.([metrics{m}, thisEnv]) = population.getStats(metrics{m});
     end
 end
