@@ -9,52 +9,6 @@ end
 % get file paths
 paths = addPaths();
 
-%% anylysis02G1
-% results of this part of the analysis are used to extract optimised 
-% gene values of P(S) and P(E) maximization 
-
-% % load file names from 02G part 2
-% analysisName = 'analysis02G1';
-% files = dir(fullfile(paths.outputs, analysisName, "*.mat"));
-% 
-% % loop through all files and collect populations with alpha={0,1}
-% populations = struct();
-% for file = 1:length(files)
-%     % load file
-%     results = load(fullfile(paths.outputs, analysisName, files(file).name)).results;
-%     popsPerEnv = load(fullfile(paths.outputs, analysisName, files(file).name)).config.PopsPerEnv;
-%     popProps = load(fullfile(paths.outputs, analysisName, files(file).name)).config.populationProperties;
-% 
-%     % collect population is alpha is 0 or 1
-%     if isa(popProps.FitFun, 'MaxPSMaxPE')
-% 
-%         % get environment name and connectome type
-%         if isempty(popProps.C); ctype='random'; else; ctype='human'; end
-%         thisEnv = popProps.Env;
-% 
-%         % initialize storage variable
-%         if ~isfield(populations, ctype)
-%             populations.(ctype) = struct();
-%         end
-%         if ~isfield(populations.(ctype), thisEnv)
-%             populations.(ctype).(thisEnv) = struct('pe', cell(popsPerEnv,1), 'ps', cell(popsPerEnv,1));
-%             i = 1; j = 1;
-%         end
-% 
-%         if popProps.FitFun.Params.alpha==0
-%             % population evolved to maximise P(E)
-%             populations.(ctype).(thisEnv)(i).pe = results.population;
-%             i = i+1;
-%         elseif popProps.FitFun.Params.alpha==1
-%             % population evolved to maximise P(S)
-%             populations.(ctype).(thisEnv)(j).ps = results.population;
-%             j = j+1;
-%         end
-%     end
-% end
-% 
-
-
 %% anaylsis02G2
 % results of this part of the analysis produce plots
 
@@ -117,6 +71,7 @@ for env = 1:numEnvs
     xlim([alphas(1)-0.1 alphas(end)+0.1])
     set(gca, 'XTick', alphas)
     ylabel('P(S)')
+    xlabel('\kappa')
     title(['generalisability: ', thisEnv])
 
     % % make boxplot
