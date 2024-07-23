@@ -1,5 +1,6 @@
 # intermediate outputs directory
 /outputs
+/outputs-published
 
 # unused code
 /junk
@@ -26,3 +27,6 @@ functions/plotting/scatter_corr.m
 
 # manuscript folder
 /paper
+
+# job scripts
+job.sh
