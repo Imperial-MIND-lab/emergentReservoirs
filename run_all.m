@@ -1,26 +1,36 @@
 start_time = tic();
 
 % Add search paths
-addPaths();
+paths = addPaths();
 
 % Set flags
+runAnalyses = false; % if false, loads pre-computed results from paths.outputs
 testRun = true;      % use quick-run configs (low sample sizes)
 saveFigures = true;  % save generated plots
 
-% Run all analyses
-analyses = {'analysis01A', ...   % evolve RC populations
-            'analysis01B', ...   % vary training sample size
-            'analysis01C', ...   % randomise trained readout
-            'analysis01D', ...   % sample across hyperparameter space
-            'analysis02G1', ...  % optimise for P(S) or P(E) in env A
-            'analysis02G2', ...  % evaluate RCs from 02G1 in env A, and B!=A
-            'analysis03A'};      % random vs. human connectome reservoirs
+% Run all analyses, if requested
+if runAnalyses
 
-for a = 1:length(analyses)
-    analysis = analyses{a};
-    config = getConfig(analysis, testRun);
-    disp(strcat("START: Running ", analysis, "."))
-    arrayfun(@(jobID) main(analysis, jobID, testRun), 1:config.numJobs)
+    % Do not overwrite results
+    if exist(paths.outputs, "dir")
+        error("Output directory '%s' already exists. Delete it or rename the output path before proceeding.", paths.outputs);
+    end
+    
+    analyses = {'analysis01A', ...   % evolve RC populations
+                'analysis01B', ...   % vary training sample size
+                'analysis01C', ...   % randomise trained readout
+                'analysis01D', ...   % sample across hyperparameter space
+                'analysis02G1', ...  % optimise for P(S) or P(E) in env A
+                'analysis02G2', ...  % evaluate RCs from 02G1 in env A, and B!=A
+                'analysis03A'};      % random vs. human connectome reservoirs
+
+    for a = 1:length(analyses)
+        analysis = analyses{a};
+        config = getConfig(analysis, testRun);
+        disp(strcat("START: Running ", analysis, "."))
+        arrayfun(@(jobID) main(analysis, jobID, testRun), 1:config.numJobs)
+    end
+    
 end
 
 % Plot all results

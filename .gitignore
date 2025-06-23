@@ -1,6 +1,7 @@
 # intermediate outputs directory
 /outputs
-/outputs-published
+/outputs_everything.zip
+/outputs.zip
 
 # unused code
 /junk
