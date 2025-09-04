@@ -33,11 +33,11 @@ for ct = 1:length(Ctypes)
                 % plot fitness trajectories
                 plotFitness(populations.(Ctypes{ct}).(Envs{env}).(Criteria{crit}));
 
-                % for non-Lorenz populations, only get loss/psi plots 
-                % (close the last figure, which is vmi/xmi trajectory)
-                if ~strcmp(Envs{env}, 'Lorenz')
-                    close
-                end
+                % % for non-Lorenz populations, only get loss/psi plots 
+                % % (close the last figure, which is vmi/xmi trajectory)
+                % if ~strcmp(Envs{env}, 'Lorenz')
+                %     close
+                % end
     
                 % save plots
                 if saveFigures
