@@ -3,7 +3,11 @@ function [psi, vmi, xmi, debiased] = computeEmergence(o, R, tau, nbsurr)
 % Optionally, performs debiasing of psi results.
 
 % compute emergence
-[psi, vmi, xmi] = EmergencePsi(R', o', tau);
+if length(size(R)) == 2
+    [psi, vmi, xmi] = EmergencePsi(R', o', tau);
+else
+    [psi, vmi, xmi] = EmergencePsi(permute(R,[2 1 3]), permute(o,[2 1 3]), tau);
+end
 
 % emergence debiasing 
 if nargout>3
