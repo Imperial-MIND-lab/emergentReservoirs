@@ -27,7 +27,8 @@ population = Population(config.populationProperties{:});
 
 % get/assign some variables
 numEnvs = length(config.environments);
-metrics = {'ps', 'pe', 'pse'};
+metrics = {'ps', 'pe', 'pse',...
+           'psi', 'xmi', 'vmi'};
 numMetrics = length(metrics);
 
 % create output variable
