@@ -1,35 +1,22 @@
-function [] = bias_analysis(saveFigures, cpu_limit)
+function [results] = bias_analysis(config)
 % Evaluates the bias in psi / mutual information estimates of the
 % populations evolved in analysis01A and plots results.
 
-if nargin==0
-    saveFigures = true;
-end
-
-if nargin>1
-    maxNumCompThreads(cpu_limit);
-end
-
-% Fix random seed
+% Fix cpu limit (relevant for cluster), and seed
+maxNumCompThreads(config.cpu_limit);
 rng(0);
-
-% get file paths
-paths = addPaths();
-analysisName = 'bias_analysis';
 
 % load evolved populations
 populations = loadPopulations();
 
-% access fieldnames
-Ctypes   = {'human'}; %fieldnames(populations);
-Envs     = {'Lorenz'}; %fieldnames(populations.(Ctypes{1}));
-Criteria = {'psi'}; %fieldnames(populations.(Ctypes{1}).(Envs{1}));
-
-% Config for this analysis
-nbsurr = 50; % number of surrogates for bias correction
+% Unwrap config
+Ctypes   = config.ctypes; 
+Envs     = config.environments;
+Criteria = config.criteria;
+nbsurr = config.nbsurr; % number of surrogates for bias correction
 
 %% Compute uncorrected, corrected, and pooled psi estimates
-resultsTbl = table();
+results = table();
 
 for ct = 1:length(Ctypes)
     for env = 1:length(Envs)
@@ -41,9 +28,16 @@ for ct = 1:length(Ctypes)
             utrain = pop.U.train; % (3, 2500)
             utest  = pop.U.test;  % (3, 1500, 100)
 
+            % Restrict number of reservoirs for testrun
+            if config.numReservoirs == -1
+                max_idx = length(pop.Reservoirs);
+            else
+                max_idx = config.numReservoirs;
+            end
+
             % Loop reservoirs in population
             tic
-            for idx = 1:length(pop.Reservoirs)
+            for idx = 1:max_idx
                 res = pop.Reservoirs{idx};
                 psi_vals = compute_psi_estimates(res, utrain, utest, nbsurr);
 
@@ -52,74 +46,9 @@ for ct = 1:length(Ctypes)
                     Ctypes(ct), Envs(env), Criteria(crit), ...
                     psi_vals(1), psi_vals(2), psi_vals(3), ...
                     'VariableNames', {'ctype','env','criterion','raw','debiased','pooled'});
-                resultsTbl = [resultsTbl; tmp];
+                results = [results; tmp];
             end
             toc
-        end
-    end
-end
-
-% Save results
-if saveFigures
-    % Create directory if it doesn't exist
-    savedir = fullfile(paths.figures, analysisName);
-    if ~exist(savedir, 'dir')
-        mkdir(savedir);
-    end
-    
-    % Save results table
-    filename = [analysisName,'_results.csv'];
-    writetable(resultsTbl, fullfile(savedir, filename));
-end
-
-%% Plot results
-colors = winter(length(Envs)); % color map by environment
-
-for ct = 1:length(Ctypes)
-    for crit = 1:length(Criteria)
-        for env = 1:length(Envs)
-            rows = strcmp(resultsTbl.ctype,Ctypes{ct}) & ...
-                   strcmp(resultsTbl.criterion,Criteria{crit}) & ...
-                   strcmp(resultsTbl.env,Envs{env});
-
-            rawVals      = resultsTbl.raw(rows);
-            debiasedVals = resultsTbl.debiased(rows);
-            pooledVals   = resultsTbl.pooled(rows);
-
-            % Stack data for plotting
-            y = [rawVals; debiasedVals; pooledVals];
-            x = [ones(size(rawVals)); 2*ones(size(debiasedVals)); 3*ones(size(pooledVals))];
-            colour = colors(env,:);
-
-            % Plot three boxes with swarm overlay
-            boxSwarmPlot(y, x, 1, colour);
-
-            % Dependent effect sizes and stats
-            s1 = mes(rawVals, debiasedVals, 'hedgesg', 'isDep', 1, 'nBoot', 10000);
-            stats1 = s1.t(:);
-            stats1.hedgesg = s1.hedgesg;
-
-            s2 = mes(rawVals, pooledVals, 'hedgesg', 'isDep', 1, 'nBoot', 10000);
-            stats2 = s2.t(:);
-            stats2.hedgesg = s2.hedgesg;
-
-            % Labels
-            ylabel('\psi')
-            set(gca, 'XTick', [1 2 3], 'XTickLabel', {'raw','debiased','pooled'})
-
-            % Add stats to title
-            title({[Ctypes{ct} ', ' Criteria{crit} ', ' Envs{env}], ...
-                   ['raw-deb: p=' num2str(stats1.p) ...
-                    ', g=' num2str(stats1.hedgesg)], ...
-                   ['raw-pool: p=' num2str(stats2.p) ...
-                    ', g=' num2str(stats2.hedgesg)]});
-
-            % save plots
-            if saveFigures
-                figname = [analysisName,'_',Ctypes{ct},'_',Criteria{crit},'_',Envs{env}];
-                savefigs(fullfile(paths.figures, analysisName), figname, true)
-                close(fig)
-            end
         end
     end
 end

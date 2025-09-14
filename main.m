@@ -146,6 +146,17 @@ switch analysisName
         % define output file name
         filename = [analysisName, '_', num2str(jobID), '.mat'];
 
+    case 'bias_analysis'
+     % MI estimation bias analysis (supplementary)
+     
+        % run analysis
+        tic
+        results = bias_analysis(config);
+        toc
+
+        % define output filename
+        filename = [analysisName,'_results.csv'];
+
     otherwise
         error(strcat("unknown analysis ", analysisName))
 end
@@ -158,10 +169,23 @@ if ~exist(analysisName, "dir")
     mkdir(analysisName)
 end
 
-% cd into output directory and save files
+% cd into output directory
 cd(analysisName)
-save(filename, "results", "config")
+
+% save depending on results file type
+[~, ~, ext] = fileparts(filename);
+switch lower(ext)
+    case '.mat'
+        save(filename, "results", "config");
+    case '.csv'
+        writetable(results, filename);
+    otherwise
+        error('Unsupported file extension: %s', ext);
+end
+
+% cd back
 cd(paths.main)
+
 
 end
 

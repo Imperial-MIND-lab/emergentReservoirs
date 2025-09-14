@@ -227,6 +227,25 @@ switch analysisName
         % return suggested number of jobs
         config.numJobs = 1;
 
+
+% Analysis03A configurations -------------------------------------------- %
+    case 'bias_analysis'
+        
+        config.seed = 0;
+        config.cpu_limit = 16;
+        config.ctypes = {'human'};
+        config.environments = {'Lorenz'};
+
+        if testRun
+            config.nbsurr = 2;
+            config.numReservoirs = 3;
+            config.criteria = {'loss'};
+        else
+            config.nbsurr = 50;
+            config.numReservoirs = -1; % all reservoirs
+            config.criteria = {'psi', 'loss'};
+        end
+
 % default output is structural connectivity ----------------------------- %
     otherwise
         config.C = sc;
