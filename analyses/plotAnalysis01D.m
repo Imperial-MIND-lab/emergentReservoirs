@@ -23,7 +23,7 @@ numEnvs = length(environments);
 % calculate conditional probabilities
 numRows = size(results,1);
 boxData = struct();
-probability_names = {'PMI(S,E)', 'P(S|E)', 'Necessity', 'P(S)'};
+probability_names = {'PMI(S,E)', 'P(S|E)', 'Necessity', 'P(S)', 'P(E)'};%, 'Xmi', 'Vmi'};
 
 % extract P(S) of all reservoirs in one table
 successProps = table('Size', [numRows*numEnvs, 2],...
@@ -44,6 +44,8 @@ for env = 1:numEnvs
     ps  = results.(['ps',thisEnv]);   % P(S)
     pe  = results.(['pe',thisEnv]);   % P(E)
     pse = results.(['pse',thisEnv]);  % P(S,E)
+    % xmi = results.(['xmi',thisEnv]);  % Xmi
+    % vmi = results.(['vmi',thisEnv]);  % Vmi
 
     % --- compute PMI = log2(P(S,E)/(P(E)*P(S)))
     pmi = log2(pse ./ (ps .* pe));
@@ -63,6 +65,9 @@ for env = 1:numEnvs
     tbl.("P(S|E)")    = ps_given_e;
     tbl.("Necessity") = necessity;
     tbl.("P(S)")      = ps;
+    tbl.("P(E)")      = pe;
+    % tbl.("Xmi")      = xmi;
+    % tbl.("Vmi")      = vmi;
     boxData.(thisEnv) = tbl;
 
     % store success probability of all reservoirs
@@ -84,8 +89,7 @@ if saveFigures
     row = 1;
     for env = 1:numEnvs
         thisEnv = environments{env};    
-
-        % TEST 01: PMI
+        % Test if PMI(S,E) is significantly different from 0
         [~, p, ~, s] = ttest(boxData.(thisEnv).("PMI(S,E)"));
         stats.environment(row) = thisEnv;
         stats.randomVariable(row) = "PMI(S,E)";
@@ -95,43 +99,8 @@ if saveFigures
         stats.mean(row)    = nanmean(boxData.(thisEnv).("PMI(S,E)"));
         stats.median(row)  = nanmedian(boxData.(thisEnv).("PMI(S,E)"));
         stats.sd(row)      = nanstd(boxData.(thisEnv).("PMI(S,E)"));
-        row = row+1;
-    
-        % TEST 02: P(S|E) vs P(S)
-        s = mes(boxData.(thisEnv).("P(S|E)"), boxData.(thisEnv).("P(S)"), ...
-                'hedgesg','isDep',1,'nBoot',10000);
-        stats.environment(row) = thisEnv;
-        stats.randomVariable(row) = "P(S|E)";
-        stats.hedgesg(row) = s.hedgesg;
-        stats.tstat(row)   = s.t.tstat;
-        stats.df(row)      = s.t.df;
-        stats.pVal(row)    = s.t.p;
-        stats.mean(row)    = nanmean(boxData.(thisEnv).("P(S|E)"));
-        stats.median(row)  = nanmedian(boxData.(thisEnv).("P(S|E)"));
-        stats.sd(row)      = nanstd(boxData.(thisEnv).("P(S|E)"));
-        row = row+1;
-    
-        % TEST 03: 1-P(S|not E) vs 0.5
-        [~, p, ~, s] = ttest(boxData.(thisEnv).("Necessity"), 0.5);
-        stats.environment(row) = thisEnv;
-        stats.randomVariable(row) = "Necessity";
-        stats.tstat(row)   = s.tstat;
-        stats.df(row)      = s.df;
-        stats.pVal(row)    = p;
-        stats.mean(row)    = nanmean(boxData.(thisEnv).("Necessity"));
-        stats.median(row)  = nanmedian(boxData.(thisEnv).("Necessity"));
-        stats.sd(row)      = nanstd(boxData.(thisEnv).("Necessity"));
-        row = row+1;
-
-        % TEST 04: P(S) descriptive stats
-        stats.environment(row) = thisEnv;
-        stats.randomVariable(row) = "P(S)";
-        stats.mean(row)    = nanmean(boxData.(thisEnv).("P(S)"));
-        stats.median(row)  = nanmedian(boxData.(thisEnv).("P(S)"));
-        stats.sd(row)      = nanstd(boxData.(thisEnv).("P(S)"));
-        row = row+1;       
+        row = row+1;      
     end
-    
     stats.fdr = fdr(stats.pVal);
     
     % save statistics
@@ -142,104 +111,7 @@ if saveFigures
     cd(paths.main)
 end
 
-%% Task difficulty
-% Test for group differences in P(S) between environments
-
-if saveFigures
-    % stats of task difficulty test
-    globalStats = table('Size', [1+numEnvs*(numEnvs-1)*0.5, 4],...
-                        'VariableTypes', {'string', 'string', 'double', 'double'}, ...
-                        'VariableNames', {'env1', 'env2' 'pVal', 'Fstat'});
-    
-    % test for global effect of alpha (using ANOVA)
-    lm = fitlm(successProps, 'success ~ environment');
-    globalStats.pVal(1)=lm.ModelFitVsNullModel.Pvalue;
-    globalStats.Fstat(1)=lm.ModelFitVsNullModel.Fstat;
-    globalStats.env1(1) = 'global';
-    globalStats.env2(1) = 'global';
-    
-    % post-hoc testing, if global effect is significant
-    if lm.ModelFitVsNullModel.Pvalue<0.05
-        varNames = {'env1', 'env2', 'hedgesg', 'tstat', 'pVal', 'fdr', 'df', 'mean1','mean2', 'sd1', 'sd2'};
-        posthocStats = table('Size', [numEnvs*(numEnvs-1)*0.5, length(varNames)],...
-                             'VariableTypes', [{'string'}, {'string'}, repmat({'double'}, [1, length(varNames)-2])], ...
-                             'VariableNames', varNames);
-        
-        comp = 1;
-        for envi = 1:numEnvs-1
-            for envj = envi+1:numEnvs
-                x = successProps.success(successProps.environment==environments{envi});
-                y = successProps.success(successProps.environment==environments{envj});
-                s = mes(x, y, 'hedgesg', 'isDep', 1, 'nBoot', 10000);
-    
-                % save stats
-                posthocStats.env1(comp) = environments{envi};
-                posthocStats.env2(comp) = environments{envj};
-                posthocStats.hedgesg(comp) = s.hedgesg;
-                posthocStats.tstat(comp) = s.t.tstat;
-                posthocStats.pVal(comp) = s.t.p;
-                posthocStats.df(comp) = s.t.df;
-                posthocStats.mean1(comp) = mean(x);
-                posthocStats.mean2(comp) = mean(y);
-                posthocStats.sd1(comp) = std(x);
-                posthocStats.sd2(comp) = std(y);
-    
-                % increment counter
-                comp = comp+1;
-            end
-        end
-
-        % fdr correction
-        posthocStats.fdr = fdr(posthocStats.pVal(:));
-
-        % save statistics
-        cd(paths.figures)
-        if ~exist(analysisName, 'dir')
-            mkdir(analysisName)
-        end
-        cd(analysisName)
-        writetable(posthocStats, strcat(analysisName,"_statistics_successprob_posthoc.csv"))
-        cd(paths.main)
-    end
-
-    % save statistics
-    cd(paths.figures)
-    if ~exist(analysisName, 'dir')
-        mkdir(analysisName)
-    end
-    cd(analysisName)
-    writetable(globalStats, strcat(analysisName,"_statistics_successprob_global.csv"))
-    cd(paths.main)
-end
-
-% plot all environments together
-figure();
-boxchart(successProps.environment, successProps.success, ...
-         'BoxFaceColor', [1 1 1].*0.35, 'BoxFaceAlpha', 0.15, ...
-         'LineWidth', 1, 'MarkerStyle', 'none');
-ylabel('P(S) all')
-
-% histograms
-figure();
-hold on
-for env = 1:numEnvs
-    thisEnv = environments{env};
-    h = histogram(boxData.(thisEnv).("P(S)"), 'BinWidth', 0.02);
-    h(1).FaceAlpha = 0.2;
-    %xline(mean(boxData.(thisEnv).("P(S)")), 'Color', 'r', 'HandleVisibility','off');
-end
-legend(environments)
-xlabel('P(S)')
-ylabel('count')
-
-% save figures
-if saveFigures
-    savefigs(fullfile(paths.figures, analysisName), 'success_probabilities', true)
-    close all
-end
-
 %% plotting
-% boxplots with P(S|E)-P(S)
 
 % boxplot with all environments
 for pn = 1:length(probability_names)
@@ -249,6 +121,52 @@ for pn = 1:length(probability_names)
         close all
     end
 end
+
+% supplementary figures: P(S) vs. P(E), Xmi, and Vmi
+colors = winter(numEnvs);
+for env = 1:numEnvs
+    thisEnv = environments{env};
+    
+    % P(S) vs P(E)
+    figure();
+    [r,p] = corr(boxData.(thisEnv).("P(S)"), boxData.(thisEnv).("P(E)"));
+    scatter(boxData.(thisEnv).("P(S)"), boxData.(thisEnv).("P(E)"), 'filled', ...
+        'MarkerFaceColor', colors(env,:), 'MarkerFaceAlpha', 0.5);
+    xlabel('P(S)');
+    ylabel('P(E)');
+    title(sprintf('%s\nr = %.3f, p = %.3g', thisEnv, r, p));
+    grid on;
+    axis square;
+
+    % % P(S) vs Xmi
+    % figure();
+    % [r,p] = corr(boxData.(thisEnv).("P(S)"), boxData.(thisEnv).("Xmi"));
+    % scatter(boxData.(thisEnv).("P(S)"), boxData.(thisEnv).("Xmi"), 'filled', ...
+    %     'MarkerFaceColor', colors(env,:), 'MarkerFaceAlpha', 0.5);
+    % xlabel('P(S)');
+    % ylabel('Xmi');
+    % title(sprintf('%s\nr = %.3f, p = %.3g', thisEnv, r, p));
+    % grid on;
+    % axis square;
+    % 
+    % % P(S) vs Vmi
+    % figure();
+    % [r,p] = corr(boxData.(thisEnv).("P(S)"), boxData.(thisEnv).("Vmi"));
+    % scatter(boxData.(thisEnv).("P(S)"), boxData.(thisEnv).("Vmi"), 'filled', ...
+    %     'MarkerFaceColor', colors(env,:), 'MarkerFaceAlpha', 0.5);
+    % xlabel('P(S)');
+    % ylabel('Vmi');
+    % title(sprintf('%s\nr = %.3f, p = %.3g', thisEnv, r, p));
+    % grid on;
+    % axis square;
+
+    % save plots
+    if saveFigures
+        savefigs(fullfile(paths.figures, analysisName), [thisEnv, '_ps_vs_pe'], true)
+        close all
+    end
+end
+
 
 %% anonymous functions
     function [results, environments] = loadResults()
@@ -291,11 +209,6 @@ end
         hold on
         if strcmp(probName,'PMI(S,E)')
             yline(0, 'LineWidth', 1, 'LineStyle', '--', 'Color', [0.6 0.6 0.6]);
-        elseif strcmp(probName,'P(S|E)')
-            base = mean(y,'omitnan');
-            yline(base, 'LineWidth', 1, 'LineStyle', '--', 'Color', [0.6 0.6 0.6]);
-        elseif strcmp(probName,'Necessity')
-            yline(0.5, 'LineWidth', 1, 'LineStyle', '--', 'Color', [0.6 0.6 0.6]);
         end
         hold off
         ylabel(probName)
