@@ -251,6 +251,7 @@ switch analysisName
         
         config.seed = 0;
         config.cpu_limit = 16;
+        config.standardize = true;
 
         if testRun
             T = struct('spinup', 500, ...            

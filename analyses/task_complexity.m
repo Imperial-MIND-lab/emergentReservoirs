@@ -92,49 +92,63 @@ results.measures = measuresTable;
 fprintf('Fitting Generalised Linear Mixed-Effects Models...\n');
 stats_list = {}; 
 
-% Unconditional models including all trials ----------------------------- %
+% Standardise continuous predictors ------------------------------------- %
+if config.standardize
+    fprintf('  - Standardising continuous predictors (z-scoring)...\n');
+    % Create new standardised columns in the main table
+    measuresTable.([complexity_metric '_z']) = zscore(measuresTable.(complexity_metric));
+    measuresTable.LLE_z = zscore(measuresTable.LLE);
+    
+    % Define predictor names to use in formulas
+    complexity_metric_fit = [complexity_metric '_z'];
+    lle_metric_fit = 'LLE_z';
+else
+    % Use original predictor names
+    complexity_metric_fit = complexity_metric;
+    lle_metric_fit = 'LLE';
+end
 
+% Unconditional models including all trials ----------------------------- %
+fprintf('  - Fitting unconditional models for S and E...\n');
 % Models for S (Success)
-formulaS_Env = sprintf('S ~ %s + Environment + (1|rc_idx) + (1|ts_idx)', complexity_metric);
+formulaS_Env = sprintf('S ~ %s + Environment + (1|rc_idx) + (1|ts_idx)', complexity_metric_fit);
 glmeS_Env = fitglme(measuresTable, formulaS_Env, 'Distribution', 'Binomial');
 statsS_Env = glmeS_Env.Coefficients;
 statsS_Env.Model = categorical(repmat({'S ~ Cplx + Env'}, height(statsS_Env), 1));
 stats_list{end+1} = statsS_Env;
 
-formulaS_LLE = sprintf('S ~ %s + LLE + (1|rc_idx) + (1|ts_idx)', complexity_metric);
+formulaS_LLE = sprintf('S ~ %s + %s + (1|rc_idx) + (1|ts_idx)', complexity_metric_fit, lle_metric_fit);
 glmeS_LLE = fitglme(measuresTable, formulaS_LLE, 'Distribution', 'Binomial');
 statsS_LLE = glmeS_LLE.Coefficients;
 statsS_LLE.Model = categorical(repmat({'S ~ Cplx + LLE'}, height(statsS_LLE), 1));
 stats_list{end+1} = statsS_LLE;
 
 % Models for E (Emergence) 
-formulaE_Env = sprintf('E ~ %s + Environment + (1|rc_idx) + (1|ts_idx)', complexity_metric);
+formulaE_Env = sprintf('E ~ %s + Environment + (1|rc_idx) + (1|ts_idx)', complexity_metric_fit);
 glmeE_Env = fitglme(measuresTable, formulaE_Env, 'Distribution', 'Binomial');
 statsE_Env = glmeE_Env.Coefficients;
 statsE_Env.Model = categorical(repmat({'E ~ Cplx + Env'}, height(statsE_Env), 1));
 stats_list{end+1} = statsE_Env;
 
-formulaE_LLE = sprintf('E ~ %s + LLE + (1|rc_idx) + (1|ts_idx)', complexity_metric);
+formulaE_LLE = sprintf('E ~ %s + %s + (1|rc_idx) + (1|ts_idx)', complexity_metric_fit, lle_metric_fit);
 glmeE_LLE = fitglme(measuresTable, formulaE_LLE, 'Distribution', 'Binomial');
 statsE_LLE = glmeE_LLE.Coefficients;
 statsE_LLE.Model = categorical(repmat({'E ~ Cplx + LLE'}, height(statsE_LLE), 1));
 stats_list{end+1} = statsE_LLE;
 
-
 % Models condition on S=1 ----------------------------------------------- %
-
+fprintf('  - Fitting conditional models for E given S=1...\n');
 % Subset data to only successful trials
 successful_trials = measuresTable(measuresTable.S == 1, :);
-
 if height(successful_trials) > 10 && numel(unique(successful_trials.E)) > 1
-
-    formula_cond_Env = sprintf('E ~ %s + Environment + (1|rc_idx) + (1|ts_idx)', complexity_metric);
+    
+    formula_cond_Env = sprintf('E ~ %s + Environment + (1|rc_idx) + (1|ts_idx)', complexity_metric_fit);
     glme_cond_Env = fitglme(successful_trials, formula_cond_Env, 'Distribution', 'Binomial');
     stats_cond_Env = glme_cond_Env.Coefficients;
     stats_cond_Env.Model = categorical(repmat({'E ~ Cplx + Env | S=1'}, height(stats_cond_Env), 1));
     stats_list{end+1} = stats_cond_Env;
 
-    formula_cond_LLE = sprintf('E ~ %s + LLE + (1|rc_idx) + (1|ts_idx)', complexity_metric);
+    formula_cond_LLE = sprintf('E ~ %s + %s + (1|rc_idx) + (1|ts_idx)', complexity_metric_fit, lle_metric_fit);
     glme_cond_LLE = fitglme(successful_trials, formula_cond_LLE, 'Distribution', 'Binomial');
     stats_cond_LLE = glme_cond_LLE.Coefficients;
     stats_cond_LLE.Model = categorical(repmat({'E ~ Cplx + LLE | S=1'}, height(stats_cond_LLE), 1));
@@ -145,6 +159,8 @@ end
 
 % Combine all stats into one table
 results.stats = vertcat(stats_list{:});
+% Add odds ratio
+results.stats.OddsRatio = exp(results.stats.Estimate);
 fprintf('Analysis complete.\n');
 
 %% Plotting
