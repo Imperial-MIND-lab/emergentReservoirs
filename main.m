@@ -157,6 +157,17 @@ switch analysisName
         % define output filename
         filename = [analysisName,'_results.csv'];
 
+    case 'task_complexity'
+     % Task complexity analysis (only for reviewer report)
+     
+        % run analysis
+        tic
+        results = task_complexity(config);
+        toc
+
+        % define output filename
+        filename = [analysisName,'_results.mat'];
+
     otherwise
         error(strcat("unknown analysis ", analysisName))
 end

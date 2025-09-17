@@ -101,6 +101,12 @@ classdef Population
             obj.U.test = [];
         end
 
+        function obj = initU(obj)
+            % Generates input signal.
+            obj.U.train = generateInput(obj.T.train+obj.T.spinup, 1, obj.Env, false);
+            obj.U.test = generateInput(obj.T.test+obj.T.spinup, obj.nTest, obj.Env, false);
+        end
+
         function obj = setnTest(obj, nTest)
             % Change the default number of evaluations of the population.
             obj.nTest = nTest;
@@ -224,12 +230,6 @@ classdef Population
 % ----------------------------------------------------------------------- %
 
     methods (Access = private)
-
-        function obj = initU(obj)
-            % Generates input signal.
-            obj.U.train = generateInput(obj.T.train+obj.T.spinup, 1, obj.Env, false);
-            obj.U.test = generateInput(obj.T.test+obj.T.spinup, obj.nTest, obj.Env, false);
-        end
 
         function obj = sampleGenes(obj)
             % sample genes uniformly from searchspace.

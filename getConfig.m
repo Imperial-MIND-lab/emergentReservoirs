@@ -228,7 +228,7 @@ switch analysisName
         config.numJobs = 1;
 
 
-% Analysis03A configurations -------------------------------------------- %
+% Bias analysis configurations ------------------------------------------ %
     case 'bias_analysis'
         
         config.seed = 0;
@@ -244,6 +244,27 @@ switch analysisName
             config.nbsurr = 50;
             config.numReservoirs = -1; % all reservoirs
             config.criteria = {'psi', 'loss'};
+        end
+
+% Task complexity analysis configurations ------------------------------- %
+    case 'task_complexity'
+        
+        config.seed = 0;
+        config.cpu_limit = 16;
+
+        if testRun
+            T = struct('spinup', 500, ...            
+                       'train', 2000, ...
+                       'test', 1000);
+            config.populationProperties = {'C', sc, 'Size', 100, 'nTest', 10, 'T', T};
+            config.environments = {'Lorenz', 'SprottA', 'SprottR'};
+        else
+            T = struct('spinup', 500, ...            
+                       'train', 2000, ...
+                       'test', 1000);
+            config.populationProperties = {'C', sc, 'Size', 1000, 'nTest', 100, 'T', T};
+            config.environments = {'Lorenz', 'SprottA', 'SprottB', ...
+                                   'SprottG', 'SprottK', 'SprottR'};
         end
 
 % default output is structural connectivity ----------------------------- %
