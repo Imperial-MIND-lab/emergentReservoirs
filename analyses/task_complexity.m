@@ -25,131 +25,155 @@ largestLyapunovExp = struct('Lorenz', 0.906, ...
 numEnvs = length(config.environments);
 allEnvData = cell(numEnvs, 1);
 
+%% Check if previous results exist
+
+% Check if results already exist and if configs match
+compute_measures = true;
+paths = addPaths();
+analysisName = 'task_complexity';
+resultsFile = fullfile(paths.outputs, analysisName, "task_complexity_results.mat");
+
+if exist(resultsFile, 'file')
+    fprintf('Previous results file found. Checking configuration...\n');
+    previous = load(resultsFile);
+    configs_match = isequaln(previous.config, config);
+    
+    if config.overwrite
+        % If overwrite is on, the configs must match
+        if ~configs_match
+            error('CONFIG MISMATCH: Overwrite is true, but the saved config does not match the current config. Aborting to prevent data loss.');
+        else
+            fprintf('  - Configs match. Proceeding with overwrite as requested.\n');
+        end
+    else
+        % If overwrite is off, we can skip computation only if configs match
+        if configs_match
+            fprintf('  - Configs match. Loading previous results and skipping computation.\n');
+            measuresTable = previous.results.measures;
+            compute_measures = false;
+        else
+            fprintf('  - Configs do not match. Re-computing is necessary.\n');
+        end
+    end
+else
+    fprintf('No previous results file found. Proceeding with computation.\n');
+end
+
 %% Train reservoirs, compute measures
 
-for env = 1:numEnvs
-    thisEnv = config.environments{env};
-    fprintf('Processing environment: %s...\n', thisEnv);
-    
-    % Train and evaluate reservoirs ------------ %
-    population = population.setEnv(thisEnv);
-    population = population.initU(); % generate train/test timeseries
-    
-    % Get dimensions for this environment's data
-    numReservoirs = population.Size;
-    numTimeSeries = size(population.U.test, 3);
-    numPredictions = numReservoirs * numTimeSeries;
-
-    % Pre-allocate matrices to store results for each reservoir and time series
-    S_outcomes  = zeros(numReservoirs, numTimeSeries);
-    E_outcomes  = zeros(numReservoirs, numTimeSeries);
-    
-    % Find the indices for ps and pe (now treated as S and E outcomes)
-    probIndices = population.Reservoirs{1}.find('ps', 'pe');
-    
-    % Loop through each reservoir to evaluate it on all time series
-    for rc_idx = 1:numReservoirs
-        rc = population.Reservoirs{rc_idx};
-        [~, rc_EvalResults] = rc.evaluate(population.U.train, population.U.test);
-        s_and_e_for_rc = rc_EvalResults(:, probIndices);
+if compute_measures 
+    for env = 1:numEnvs
+        thisEnv = config.environments{env};
+        fprintf('Processing environment: %s...\n', thisEnv);
         
-        S_outcomes(rc_idx, :)  = s_and_e_for_rc(:, 1)';
-        E_outcomes(rc_idx, :)  = s_and_e_for_rc(:, 2)';
-    end
-
-    % Compute complexity measures -------------- %
-    sampleEntropyVec = zeros(numTimeSeries, 1);
-    for ts_idx =  1:numTimeSeries
-        ts = squeeze(population.U.test(:, :, ts_idx));
-        sampleEntropyVec(ts_idx) = calculateSampleEntropy(ts);
-    end
+        % Train and evaluate reservoirs ------------ %
+        population = population.setEnv(thisEnv);
+        population = population.initU(); % generate train/test timeseries
+        
+        % Get dimensions for this environment's data
+        numReservoirs = population.Size;
+        numTimeSeries = size(population.U.test, 3);
+        numPredictions = numReservoirs * numTimeSeries;
     
-    % Store results
-    [ts_idx_grid, rc_idx_grid] = meshgrid(1:numTimeSeries, 1:numReservoirs);
-    envTable = table(...
-        categorical(repmat({thisEnv}, numPredictions, 1)), ...
-        rc_idx_grid(:), ...
-        ts_idx_grid(:), ...
-        S_outcomes(:), ...
-        E_outcomes(:), ...
-        repelem(sampleEntropyVec, numReservoirs), ...
-        repmat(largestLyapunovExp.(thisEnv), numPredictions, 1), ...
-        'VariableNames', {'Environment', 'rc_idx', 'ts_idx', 'S', 'E', ...
-                          complexity_metric, 'LLE'});
-    allEnvData{env} = envTable;
+        % Pre-allocate matrices to store results for each reservoir and time series
+        S_outcomes  = zeros(numReservoirs, numTimeSeries);
+        E_outcomes  = zeros(numReservoirs, numTimeSeries);
+        
+        % Find the indices for ps and pe (now treated as S and E outcomes)
+        probIndices = population.Reservoirs{1}.find('ps', 'pe');
+        
+        % Loop through each reservoir to evaluate it on all time series
+        for rc_idx = 1:numReservoirs
+            rc = population.Reservoirs{rc_idx};
+            [~, rc_EvalResults] = rc.evaluate(population.U.train, population.U.test);
+            s_and_e_for_rc = rc_EvalResults(:, probIndices);
+            
+            S_outcomes(rc_idx, :)  = s_and_e_for_rc(:, 1)';
+            E_outcomes(rc_idx, :)  = s_and_e_for_rc(:, 2)';
+        end
+    
+        % Compute complexity measures -------------- %
+        sampleEntropyVec = zeros(numTimeSeries, 1);
+        for ts_idx =  1:numTimeSeries
+            ts = squeeze(population.U.test(:, :, ts_idx));
+            sampleEntropyVec(ts_idx) = calculateSampleEntropy(ts);
+        end
+        
+        % Store results
+        [ts_idx_grid, rc_idx_grid] = meshgrid(1:numTimeSeries, 1:numReservoirs);
+        envTable = table(...
+            categorical(repmat({thisEnv}, numPredictions, 1)), ...
+            rc_idx_grid(:), ...
+            ts_idx_grid(:), ...
+            S_outcomes(:), ...
+            E_outcomes(:), ...
+            repelem(sampleEntropyVec, numReservoirs), ...
+            repmat(largestLyapunovExp.(thisEnv), numPredictions, 1), ...
+            'VariableNames', {'Environment', 'rc_idx', 'ts_idx', 'S', 'E', ...
+                              complexity_metric, 'LLE'});
+        allEnvData{env} = envTable;
+    end
+    % Combine data from all envs
+    measuresTable = vertcat(allEnvData{:});
 end
 
-% Combine data from all envs
-measuresTable = vertcat(allEnvData{:});
+% Store measures in results
 results.measures = measuresTable;
 
-%% Fit Generalised Linear Mixed Effects Models (GLMM)
-fprintf('Fitting Generalised Linear Mixed-Effects Models...\n');
-stats_list = {}; 
+%% Generalised linear mixed-effect models (GLMMs) for each environment
+fprintf('  - Fitting conditional models for each environment separately...\n');
+stats_env_list = {};
+env_names = unique(measuresTable.Environment);
 
-% Standardise continuous predictors ------------------------------------- %
-if config.standardize
-    fprintf('  - Standardising continuous predictors (z-scoring)...\n');
-    measuresTable.([complexity_metric '_z']) = zscore(measuresTable.(complexity_metric));
-    complexity_metric_fit = [complexity_metric '_z'];
-else
-    complexity_metric_fit = complexity_metric;
+for i = 1:numel(env_names)
+    env_name = env_names(i);
+    fprintf('    - Processing environment: %s\n', env_name);
+    env_data = measuresTable(measuresTable.Environment == env_name, :);
+
+    % Determine predictor and standardize within the current environment
+    local_complexity_metric_fit = complexity_metric;
+    if config.standardize
+        % If standardizing, z-score only the data for this environment
+        z_scored_col_name = [complexity_metric '_z_local'];
+        env_data.(z_scored_col_name) = zscore(env_data.(complexity_metric));
+        local_complexity_metric_fit = z_scored_col_name; 
+    end
+
+    % Define the model formula using the (potentially new) local predictor
+    formula_env_specific = sprintf('S ~ %s + (1|rc_idx) + (1|ts_idx)', local_complexity_metric_fit);
+    
+    % Model for S given E=1 (Sufficiency) for this environment
+    emergent_trials_env = env_data(env_data.E == 1, :);
+    if height(emergent_trials_env) > 10 && numel(unique(emergent_trials_env.S)) > 1
+        glme_suff_env = fitglme(emergent_trials_env, formula_env_specific, 'Distribution', 'Binomial');
+        stats_suff_env = glme_suff_env.Coefficients;
+        stats_suff_env.Model = categorical(repmat({'S ~ Cplx | E=1'}, height(stats_suff_env), 1));
+        stats_suff_env.Environment = repmat(env_name, height(stats_suff_env), 1);
+        stats_env_list{end+1} = stats_suff_env;
+    else
+        fprintf('      - Skipping S|E=1 model for %s: not enough data or variance.\n', env_name);
+    end
+    
+    % Model for S given E=0 (Necessity) for this environment
+    non_emergent_trials_env = env_data(env_data.E == 0, :);
+    if height(non_emergent_trials_env) > 10 && numel(unique(non_emergent_trials_env.S)) > 1
+        glme_cond_env = fitglme(non_emergent_trials_env, formula_env_specific, 'Distribution', 'Binomial');
+        stats_cond_env = glme_cond_env.Coefficients;
+        stats_cond_env.Model = categorical(repmat({'S ~ Cplx | E=0'}, height(stats_cond_env), 1));
+        stats_cond_env.Environment = repmat(env_name, height(stats_cond_env), 1);
+        stats_env_list{end+1} = stats_cond_env;
+    else
+        fprintf('      - Skipping S|E=0 model for %s: not enough data or variance.\n', env_name);
+    end
 end
 
-% Unconditional models including all trials ----------------------------- %
-fprintf('  - Fitting unconditional models for S and E...\n');
-
-% Models for S (Success)
-formulaS_Env = sprintf('S ~ %s + Environment + (1|rc_idx) + (1|ts_idx)', complexity_metric_fit);
-glmeS_Env = fitglme(measuresTable, formulaS_Env, 'Distribution', 'Binomial');
-statsS_Env = glmeS_Env.Coefficients;
-statsS_Env.Model = categorical(repmat({'S ~ Cplx + Env'}, height(statsS_Env), 1));
-stats_list{end+1} = statsS_Env;
-
-% Models for E (Emergence) 
-formulaE_Env = sprintf('E ~ %s + Environment + (1|rc_idx) + (1|ts_idx)', complexity_metric_fit);
-glmeE_Env = fitglme(measuresTable, formulaE_Env, 'Distribution', 'Binomial');
-statsE_Env = glmeE_Env.Coefficients;
-statsE_Env.Model = categorical(repmat({'E ~ Cplx + Env'}, height(statsE_Env), 1));
-stats_list{end+1} = statsE_Env;
-
-% Models condition on E=1 (Sufficiency) --------------------------------- %
-fprintf('  - Fitting conditional models for S given E=1...\n');
-
-% Subset data to only emergent trials
-emergent_trials = measuresTable(measuresTable.E == 1, :);
-
-if height(emergent_trials) > 10 && numel(unique(emergent_trials.S)) > 1  
-    formula_suff_Env = sprintf('S ~ %s + Environment + (1|rc_idx) + (1|ts_idx)', complexity_metric_fit);
-    glme_suff_Env = fitglme(emergent_trials, formula_suff_Env, 'Distribution', 'Binomial');
-    stats_suff_Env = glme_suff_Env.Coefficients;
-    stats_suff_Env.Model = categorical(repmat({'S ~ Cplx + Env | E=1'}, height(stats_suff_Env), 1));
-    stats_list{end+1} = stats_suff_Env;
+if ~isempty(stats_env_list)
+    results.stats = vertcat(stats_env_list{:});
+    % Add odds ratio
+    results.stats.OddsRatio = exp(results.stats.Estimate);
 else
-    warning('Skipping conditional models: not enough emergent trials (E=1) or lack of variance in S.');
+    results.stats = table();
 end
-
-% Models condition on E=0 (Necessity) ----------------------------------- %
-fprintf('  - Fitting conditional models for S given E=0...\n');
-
-% Subset data to only non-emergent trials
-non_emergent_trials = measuresTable(measuresTable.E == 0, :);
-
-if height(non_emergent_trials) > 10 && numel(unique(non_emergent_trials.S)) > 1
-    formula_cond_Env = sprintf('S ~ %s + Environment + (1|rc_idx) + (1|ts_idx)', complexity_metric_fit);
-    glme_cond_Env = fitglme(non_emergent_trials, formula_cond_Env, 'Distribution', 'Binomial');
-    stats_cond_Env = glme_cond_Env.Coefficients;
-    stats_cond_Env.Model = categorical(repmat({'S ~ Cplx + Env | E=0'}, height(stats_cond_Env), 1));
-    stats_list{end+1} = stats_cond_Env;
-else
-    warning('Skipping conditional models: not enough non-emergent trials (E=0) or lack of variance in S.');
-end
-
-% Combine all stats into one table
-results.stats = vertcat(stats_list{:});
-% Add odds ratio
-results.stats.OddsRatio = exp(results.stats.Estimate);
-fprintf('Analysis complete.\n');
 
 end
 

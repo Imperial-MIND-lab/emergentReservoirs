@@ -251,6 +251,7 @@ switch analysisName
         
         config.seed = 0;
         config.cpu_limit = 16;
+        config.overwrite = false; % overwrites existing results
         config.standardize = true;
 
         if testRun
