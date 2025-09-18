@@ -5,8 +5,7 @@ function [results] = task_complexity(config)
 %   - measures: table with reservoir outcomes (S, E), env and complexity
 %   - stats:    table with all relevant stats from the GLMMs
 
-% Fix random seed
-rng(config.seed)
+% Make sure not to exceed cpu limit
 maxNumCompThreads(config.cpu_limit);
 
 % Initialise a large population of reservoirs with given settings
@@ -60,6 +59,9 @@ else
 end
 
 %% Train reservoirs, compute measures
+
+% Fix random seed
+rng(config.seed)
 
 if compute_measures 
     for env = 1:numEnvs
