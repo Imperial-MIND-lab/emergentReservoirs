@@ -5,13 +5,15 @@ function [results] = task_complexity(config)
 %   - measures: table with reservoir outcomes (S, E), env and complexity
 %   - stats:    table with all relevant stats from the GLMMs
 
-% Make sure not to exceed cpu limit
+% Fix random seed
+rng(config.seed)
 maxNumCompThreads(config.cpu_limit);
 
 % Initialise a large population of reservoirs with given settings
 population = Population(config.populationProperties{:});
 
 % Outcome and complexity variables
+outcomes = {'S', 'E', 'SE_Group'};
 complexity_metric = 'sampleEntropy'; 
 largestLyapunovExp = struct('Lorenz', 0.906, ...
                             'SprottA', 0.014, ...
@@ -24,102 +26,66 @@ largestLyapunovExp = struct('Lorenz', 0.906, ...
 numEnvs = length(config.environments);
 allEnvData = cell(numEnvs, 1);
 
-%% Check if previous results exist
-
-% Check if results already exist and if configs match
-compute_measures = true;
-paths = addPaths();
-analysisName = 'task_complexity';
-resultsFile = fullfile(paths.outputs, analysisName, "task_complexity_results.mat");
-
-if exist(resultsFile, 'file')
-    fprintf('Previous results file found. Checking configuration...\n');
-    previous = load(resultsFile);
-    configs_match = isequaln(previous.config, config);
-    
-    if config.overwrite
-        % If overwrite is on, the configs must match
-        if ~configs_match
-            error('CONFIG MISMATCH: Overwrite is true, but the saved config does not match the current config. Aborting to prevent data loss.');
-        else
-            fprintf('  - Configs match. Proceeding with overwrite as requested.\n');
-        end
-    else
-        % If overwrite is off, we can skip computation only if configs match
-        if configs_match
-            fprintf('  - Configs match. Loading previous results and skipping computation.\n');
-            measuresTable = previous.results.measures;
-            compute_measures = false;
-        else
-            fprintf('  - Configs do not match. Re-computing is necessary.\n');
-        end
-    end
-else
-    fprintf('No previous results file found. Proceeding with computation.\n');
-end
-
 %% Train reservoirs, compute measures
 
-% Fix random seed
-rng(config.seed)
+for env = 1:numEnvs
+    thisEnv = config.environments{env};
+    fprintf('Processing environment: %s...\n', thisEnv);
+    
+    % Train and evaluate reservoirs ------------ %
+    population = population.setEnv(thisEnv);
+    population = population.initU(); % generate train/test timeseries
+    
+    % Get dimensions for this environment's data
+    numReservoirs = population.Size;
+    numTimeSeries = size(population.U.test, 3);
+    numPredictions = numReservoirs * numTimeSeries;
 
-if compute_measures 
-    for env = 1:numEnvs
-        thisEnv = config.environments{env};
-        fprintf('Processing environment: %s...\n', thisEnv);
-        
-        % Train and evaluate reservoirs ------------ %
-        population = population.setEnv(thisEnv);
-        population = population.initU(); % generate train/test timeseries
-        
-        % Get dimensions for this environment's data
-        numReservoirs = population.Size;
-        numTimeSeries = size(population.U.test, 3);
-        numPredictions = numReservoirs * numTimeSeries;
+    % Pre-allocate matrices to store results for each reservoir and time series
+    S_outcomes  = zeros(numReservoirs, numTimeSeries);
+    E_outcomes  = zeros(numReservoirs, numTimeSeries);
     
-        % Pre-allocate matrices to store results for each reservoir and time series
-        S_outcomes  = zeros(numReservoirs, numTimeSeries);
-        E_outcomes  = zeros(numReservoirs, numTimeSeries);
-        
-        % Find the indices for ps and pe (now treated as S and E outcomes)
-        probIndices = population.Reservoirs{1}.find('ps', 'pe');
-        
-        % Loop through each reservoir to evaluate it on all time series
-        for rc_idx = 1:numReservoirs
-            rc = population.Reservoirs{rc_idx};
-            [~, rc_EvalResults] = rc.evaluate(population.U.train, population.U.test);
-            s_and_e_for_rc = rc_EvalResults(:, probIndices);
-            
-            S_outcomes(rc_idx, :)  = s_and_e_for_rc(:, 1)';
-            E_outcomes(rc_idx, :)  = s_and_e_for_rc(:, 2)';
-        end
+    % Find the indices for ps and pe (now treated as S and E outcomes)
+    probIndices = population.Reservoirs{1}.find('ps', 'pe');
     
-        % Compute complexity measures -------------- %
-        sampleEntropyVec = zeros(numTimeSeries, 1);
-        for ts_idx =  1:numTimeSeries
-            ts = squeeze(population.U.test(:, :, ts_idx));
-            sampleEntropyVec(ts_idx) = calculateSampleEntropy(ts);
-        end
+    % Loop through each reservoir to evaluate it on all time series
+    for rc_idx = 1:numReservoirs
+        rc = population.Reservoirs{rc_idx};
+        [~, rc_EvalResults] = rc.evaluate(population.U.train, population.U.test);
+        s_and_e_for_rc = rc_EvalResults(:, probIndices);
         
-        % Store results
-        [ts_idx_grid, rc_idx_grid] = meshgrid(1:numTimeSeries, 1:numReservoirs);
-        envTable = table(...
-            categorical(repmat({thisEnv}, numPredictions, 1)), ...
-            rc_idx_grid(:), ...
-            ts_idx_grid(:), ...
-            S_outcomes(:), ...
-            E_outcomes(:), ...
-            repelem(sampleEntropyVec, numReservoirs), ...
-            repmat(largestLyapunovExp.(thisEnv), numPredictions, 1), ...
-            'VariableNames', {'Environment', 'rc_idx', 'ts_idx', 'S', 'E', ...
-                              complexity_metric, 'LLE'});
-        allEnvData{env} = envTable;
+        S_outcomes(rc_idx, :)  = s_and_e_for_rc(:, 1)';
+        E_outcomes(rc_idx, :)  = s_and_e_for_rc(:, 2)';
     end
-    % Combine data from all envs
-    measuresTable = vertcat(allEnvData{:});
+
+    % Compute complexity measures -------------- %
+    sampleEntropyVec = zeros(numTimeSeries, 1);
+    for ts_idx =  1:numTimeSeries
+        ts = squeeze(population.U.test(:, :, ts_idx));
+        sampleEntropyVec(ts_idx) = calculateSampleEntropy(ts);
+    end
+    
+    % Group S and E into 4-level groups (00, 10, 11, 01)
+    SE_Group = categorical(cellstr(strcat('S', num2str(S_outcomes(:)), '_E', num2str(E_outcomes(:)))));
+    
+    % Store results
+    [ts_idx_grid, rc_idx_grid] = meshgrid(1:numTimeSeries, 1:numReservoirs);
+    envTable = table(...
+        categorical(repmat({thisEnv}, numPredictions, 1)), ...
+        rc_idx_grid(:), ...
+        ts_idx_grid(:), ...
+        S_outcomes(:), ...
+        E_outcomes(:), ...
+        SE_Group, ... 
+        repelem(sampleEntropyVec, numReservoirs), ...
+        repmat(largestLyapunovExp.(thisEnv), numPredictions, 1), ...
+        'VariableNames', {'Environment', 'rc_idx', 'ts_idx', 'S', 'E', ...
+                          'SE_Group', complexity_metric, 'LLE'});
+    allEnvData{env} = envTable;
 end
 
-% Store measures in results
+% Combine data from all envs
+measuresTable = vertcat(allEnvData{:});
 results.measures = measuresTable;
 
 %% Generalised linear mixed-effect models (GLMMs) for each environment
